@@ -1,0 +1,11 @@
+# Windsurf — AI Engineering Harness
+
+Entrypoint: `.ai-harness/AGENTS.md`
+
+- Runtime: `.ai-harness/Runtime/`
+- Workflows: feature | bug | refactoring | migration
+- Knowledge + Specification/features/<id>/
+- Agents: architect, developer, reviewer, tester
+- Tools + Governance/permissions.md (`auto` | `ask` | `deny`)
+
+Spec before code. No commit/push/secrets without matrix + explicit ask.

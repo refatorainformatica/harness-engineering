@@ -1,0 +1,17 @@
+---
+description: AI Engineering Harness — Knowledge, Specs, Agents, Workflows, Governance
+alwaysApply: true
+---
+
+# AI Engineering Harness
+
+Entrypoint: `.ai-harness/AGENTS.md`.
+
+1. Run em `.ai-harness/Runtime/state/runs/` (ver `Runtime/RUN.md` + `LOOP.md`).
+2. Escolher Workflow (`feature` | `bug` | `refactoring` | `migration`).
+3. Ler Knowledge + Specification da feature.
+4. Assumir papel em `Agents/` (architect / developer / reviewer / tester).
+5. Só tools em `Tools/` com `Governance/permissions.md` (`auto` / `ask` / `deny`).
+6. Atualizar Specification/ADR quando comportamento ou decisão mudar.
+
+Não inventar regras contra Knowledge/Governance. Commit/push/secrets só conforme a matriz.
