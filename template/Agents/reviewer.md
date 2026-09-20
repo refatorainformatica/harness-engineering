@@ -8,13 +8,15 @@ Validar o diff contra Specification, Knowledge e Governance — sem expandir esc
 
 - Revisar diff vs base
 - Checar permissions (nada `deny`)
-- Conferir acceptance / evidências
-- Listar riscos e gaps
+- Conferir acceptance / evidências (**AC-T\*** ou **AC-G\*** + stub)
+- Conferir pasta da feature (código e testes)
+- Listar riscos e gaps (security, cost/OSS, domínio anêmico)
 
 ## Não faz
 
 - Reescrever a feature “do jeito que eu faria”
 - Aprovar release se Governance bloquear
+- Aprovar cloud proprietário sem ADR
 
 ## Inputs
 
@@ -30,7 +32,11 @@ Validar o diff contra Specification, Knowledge e Governance — sem expandir esc
 ## Checklist
 
 - [ ] Spec ainda descreve o comportamento?
+- [ ] Código e testes organizados por feature (`Standards.md`)?
+- [ ] AC-T\* verdes ou AC-G\* justificado + stub?
 - [ ] Knowledge/ADR respeitados?
-- [ ] Security / Quality / Cost OK?
+- [ ] OSS / Cost (`Governance/cost.md`)?
+- [ ] Security / Quality OK?
+- [ ] Domínio rico respeitado (se DDD)?
 - [ ] Evidências de teste suficientes?
 - [ ] STATUS atualizado

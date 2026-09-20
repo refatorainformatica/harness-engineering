@@ -44,7 +44,8 @@ harness-engineering/
 ├── docs/
 │   ├── adoption-guide.md
 │   ├── sdlc-mapping.md
-│   └── ide-adapters.md
+│   ├── ide-adapters.md
+│   └── rules-baseline.md
 ├── template/                 → copia para <projeto>/.ai-harness/
 ├── adapters/                 Cursor, Copilot, Claude, Windsurf, …
 └── scripts/init-harness.sh
@@ -62,11 +63,14 @@ harness-engineering/
 
 Depois: preencher `Knowledge/`, ajustar `Tools/` + `Governance/`, criar features em `Specification/features/`.
 
-Guia: [docs/adoption-guide.md](docs/adoption-guide.md) · Adapters: [docs/ide-adapters.md](docs/ide-adapters.md).
+Guia: [docs/adoption-guide.md](docs/adoption-guide.md) · Adapters: [docs/ide-adapters.md](docs/ide-adapters.md) · Regras: [docs/rules-baseline.md](docs/rules-baseline.md).
 
 ## Princípios
 
 - Spec antes de código — sem aceite → `BLOCKED`.
+- **Código e testes sempre por feature** (`template/Knowledge/Standards.md`).
+- **OSS primeiro** — cloud proprietário só com ADR (`template/Governance/cost.md`).
+- Aceite = testes (**AC-T\***) ou lacuna justificada (**AC-G\*** + stub).
 - Workflow orquestra; Agent executa o papel.
 - IA produz; humano aprova o que for `ask`.
 - Knowledge + Governance > preferência do modelo.

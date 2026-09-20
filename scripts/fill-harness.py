@@ -31,6 +31,12 @@ SKIP_DIRS = {
 
 DOTNET_TEST_GLOBS = ("*Tests*", "*Test", "tests", "test")
 
+KIT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_WORKSPACE = KIT_ROOT.parent
+
+HARNESS_PROJECT_START = "<!-- HARNESS:PROJECT-START -->"
+HARNESS_PROJECT_END = "<!-- HARNESS:PROJECT-END -->"
+
 
 def read_readme(repo: Path) -> str:
     for name in ("README.md", "readme.md", "Readme.md"):
@@ -156,6 +162,27 @@ def write(path: Path, content: str) -> None:
     path.write_text(content.rstrip() + "\n", encoding="utf-8")
 
 
+def upsert_project_section(path: Path, title: str, body: str) -> None:
+    """Insert or replace the generated overlay without wiping canonical template rules."""
+    block = (
+        f"{HARNESS_PROJECT_START}\n"
+        f"## {title}\n\n"
+        f"{body.rstrip()}\n"
+        f"{HARNESS_PROJECT_END}\n"
+    )
+    if path.is_file():
+        existing = path.read_text(encoding="utf-8", errors="replace")
+        if HARNESS_PROJECT_START in existing and HARNESS_PROJECT_END in existing:
+            pre = existing.split(HARNESS_PROJECT_START)[0].rstrip()
+            post = existing.split(HARNESS_PROJECT_END, 1)[1]
+            text = pre + "\n\n" + block + post.lstrip("\n")
+        else:
+            text = existing.rstrip() + "\n\n" + block
+        write(path, text)
+    else:
+        write(path, block)
+
+
 def fill_repo(repo: Path) -> None:
     harness = repo / ".ai-harness"
     if not harness.is_dir():
@@ -213,6 +240,12 @@ def fill_repo(repo: Path) -> None:
 ## Estilo
 
 {chr(10).join('- ' + s for s in arch_style)}
+
+**Feature-first (obrigatório):** pastas de código e de teste seguem a capacidade de negócio. Camadas técnicas ficam **dentro** da feature. Ver `Standards.md`.
+
+**OSS-first:** open source → self-host → cloud proprietário só com ADR (`Governance/cost.md`).
+
+**Domínio rico** se DDD/Clean Architecture: comportamento nas entidades; Application só orquestra.
 
 ## Estrutura (topo do repositório)
 
@@ -291,39 +324,37 @@ def fill_repo(repo: Path) -> None:
 
     build_cmd = f"dotnet build {sln}" if sln else ("flutter build apk --debug" if stack["flutter"] else "ver README")
 
-    write(
-        harness / "Knowledge/Standards.md",
-        f"""# Standards — {name}
-
-> Gerado automaticamente. Alinhe com o README do projeto.
-
-## Código
-
-- Stack: {', '.join(k for k, v in stack.items() if v and k not in ('docs_only', 'landing')) or 'ver README'}
-- Formatação: usar formatter da stack (`dotnet format`, `dart format`, etc.)
-
-## Testes
-
-- Comando principal: `{test_cmd}`
-- Registrar evidências em `Specification/features/<id>/acceptance.md`
-
-## Git / PR
-
-- Branching: feature branches → merge em branch principal
-- Commit/push: **ask** (ver `Governance/permissions.md`)
-
-## Build local
+    stack_body = f"""- Stack: {', '.join(k for k, v in stack.items() if v and k not in ('docs_only', 'landing')) or 'ver README'}
+- Formatação: formatter da stack (`dotnet format`, `dart format`, etc.)
+- Testes: `{test_cmd}` (pasta da feature)
+- Build:
 
 ```bash
 {build_cmd}
 ```
 
-## Documentação canônica
+- Commit/push: **ask** (`Governance/permissions.md`)
+- Deps: OSS primeiro (`Governance/cost.md`)
+"""
+    standards_path = harness / "Knowledge/Standards.md"
+    if standards_path.is_file() and "Organização por feature" in standards_path.read_text(encoding="utf-8", errors="replace"):
+        upsert_project_section(standards_path, "Stack e comandos (gerado)", stack_body)
+    else:
+        write(
+            standards_path,
+            f"""# Standards — {name}
 
-- README.md
-- docs/ (se existir)
+> Gerado automaticamente. Alinhe com o README do projeto.
+
+## Organização por feature (obrigatório)
+
+Código e testes **sempre** por capacidade de negócio. Ver template do kit.
+
+## Stack e comandos (gerado)
+
+{stack_body}
 """,
-    )
+        )
 
     # Tools — stack-specific sections
     build_tools = """## Genérico / arquivos
@@ -378,6 +409,10 @@ def fill_repo(repo: Path) -> None:
         test_tools += "| `node.test` | `npm test` | auto |\n"
     if not stack["dotnet"] and not stack["flutter"] and not stack["node"]:
         test_tools += "| `test.manual` | conforme README | **ask** |\n"
+    test_tools += (
+        "\nNovos testes: **sempre** sob a pasta da feature (`Standards.md`). "
+        "Lacuna AC-G*: stub mínimo na pasta da feature.\n"
+    )
     write(harness / "Tools/test.md", f"# Tools — Test\n\n{test_tools}")
 
     val_tools = """| ID | Ação | Notas |
@@ -392,38 +427,19 @@ def fill_repo(repo: Path) -> None:
         val_tools += "| `flutter.analyze` | `flutter analyze` | auto |\n"
     write(harness / "Tools/validation.md", f"# Tools — Validation\n\n{val_tools}")
 
-    write(
+    upsert_project_section(
         harness / "Governance/architecture.md",
-        f"""# Governance — Architecture
-
-## Regras deste projeto
-
-- Seguir `Knowledge/Architecture.md` e README.md
-- Mudanças estruturais → ADR em `Knowledge/ADR/`
-- Estilo detectado: {arch_style[0]}
-
-## Acoplamentos proibidos (revisar)
-
-- Evitar dependências circulares entre módulos principais
-- Não introduzir padrão novo sem Architect + ADR
-""",
+        "Projeto (detectado)",
+        f"- Estilo: {arch_style[0]}\n"
+        "- Feature-first e OSS-first valem mesmo neste overlay.\n"
+        "- Mudanças estruturais → ADR; cloud proprietário → ADR (`cost.md`).\n",
     )
-
-    write(
+    upsert_project_section(
         harness / "Governance/quality.md",
-        f"""# Governance — Quality
-
-## Gates mínimos
-
-- [ ] Build: `{build_cmd}`
-- [ ] Testes: `{test_cmd}` (quando aplicável)
-- [ ] Lint/analyze nos arquivos tocados
-- [ ] Review humano antes de merge
-
-## Projeto
-
-- Evidências em `Specification/features/<id>/acceptance.md`
-""",
+        "Projeto (detectado)",
+        f"- Build: `{build_cmd}`\n"
+        f"- Testes: `{test_cmd}` (escopo da feature; AC-T* ou AC-G* + stub)\n"
+        "- Evidências em `Specification/features/<id>/acceptance.md`\n",
     )
 
     write(
@@ -469,7 +485,7 @@ Para cada feature crítica, preencher `requirements.md`, `use-cases.md`, `accept
 
 
 def main() -> int:
-    base = Path("/home/desenvolvedor/Projects/Refatora")
+    base = DEFAULT_WORKSPACE
     if len(sys.argv) > 1:
         repos = [Path(p).resolve() for p in sys.argv[1:]]
     else:

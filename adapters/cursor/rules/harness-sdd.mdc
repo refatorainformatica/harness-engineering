@@ -14,4 +14,4 @@ Entrypoint: `.ai-harness/AGENTS.md`.
 5. Só tools em `Tools/` com `Governance/permissions.md` (`auto` / `ask` / `deny`).
 6. Atualizar Specification/ADR quando comportamento ou decisão mudar.
 
-Não inventar regras contra Knowledge/Governance. Commit/push/secrets só conforme a matriz.
+Não inventar regras contra Knowledge/Governance. **Código e testes sempre por feature** (`.ai-harness/Knowledge/Standards.md`). **OSS primeiro** (`Governance/cost.md`). Aceite = AC-T\* ou AC-G\* + stub. Commit/push/secrets só conforme a matriz.

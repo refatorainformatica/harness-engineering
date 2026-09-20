@@ -6,9 +6,9 @@ Obrigatório para **qualquer** agente (Cursor, Copilot, Claude Code, Windsurf, C
 
 1. **Run** — criar/continuar `.ai-harness/Runtime/state/runs/<run-id>/` ([Runtime/RUN.md](./Runtime/RUN.md)).
 2. **Workflow** — escolher em [Workflows/](./Workflows/): `feature` | `bug` | `refactoring` | `migration`.
-3. **Knowledge** — ler o que for relevante em [Knowledge/](./Knowledge/) (Architecture, Domain, Standards, ADR).
-4. **Specification** — ler `Specification/features/<id>/` (requirements, use-cases, acceptance).
-5. **Governance** — aplicar [Governance/](./Governance/) + [permissions](./Governance/permissions.md).
+3. **Knowledge** — ler o que for relevante em [Knowledge/](./Knowledge/) (Architecture, Domain, Standards, ADR). **Código e testes sempre por feature** (`Standards.md`).
+4. **Specification** — ler `Specification/features/<id>/` (requirements, use-cases, acceptance). Aceite = **AC-T\*** (teste) ou **AC-G\*** (lacuna + stub).
+5. **Governance** — aplicar [Governance/](./Governance/) + [permissions](./Governance/permissions.md). **OSS primeiro** (`cost.md`); secrets nunca.
 6. **Agent role** — assumir o papel adequado em [Agents/](./Agents/) (pode haver handoff na mesma run).
 7. **Tools** — só IDs em [Tools/](./Tools/) com nível `auto` | `ask` | `deny`.
 8. **Loop** — [Runtime/LOOP.md](./Runtime/LOOP.md) até `DONE` | `BLOCKED` | `FAILED`.
@@ -25,11 +25,19 @@ Obrigatório para **qualquer** agente (Cursor, Copilot, Claude Code, Windsurf, C
 
 Registre handoffs no `LOG.md` da run.
 
+## Regras canônicas (frota)
+
+- Feature-first: código e testes na pasta da feature; legado migra ao ser tocado.
+- OSS-first: open source → self-host → cloud proprietário só com ADR.
+- Não expandir escopo para desbloquear; máx. ~12 iterações/run.
+- Commit/push/secrets só conforme a matriz (`ask` / `deny`).
+- DDD: domínio rico; Application não seta campos internos.
+
 ## Ao concluir
 
 - STATUS → `DONE`
-- Acceptance atualizado se o comportamento mudou
-- ADR novo se houve decisão arquitetural
+- Acceptance atualizado se o comportamento mudou (AC-T\* / AC-G\*)
+- ADR novo se houve decisão arquitetural ou vendor cloud
 - Resumir arquivos + como validar
 
 ## Mapa rápido

@@ -8,4 +8,4 @@ Entrypoint: `.ai-harness/AGENTS.md`
 - Agents: architect, developer, reviewer, tester
 - Tools + Governance/permissions.md (`auto` | `ask` | `deny`)
 
-Spec before code. No commit/push/secrets without matrix + explicit ask.
+Spec before code. Code and tests always by feature (`.ai-harness/Knowledge/Standards.md`). OSS-first (`Governance/cost.md`). Acceptance = AC-T* or AC-G* + stub. No commit/push/secrets without matrix + explicit ask.

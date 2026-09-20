@@ -664,7 +664,7 @@ Cada feature possui `requirements.md`, `use-cases.md`, `acceptance.md` (**AC = t
 
 
 def main() -> int:
-    base = Path("/home/desenvolvedor/Projects/Refatora")
+    base = fill.DEFAULT_WORKSPACE
     if len(sys.argv) > 1:
         repos = [Path(p).resolve() for p in sys.argv[1:]]
     else:

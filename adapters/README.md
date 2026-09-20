@@ -4,7 +4,7 @@ O harness em `.ai-harness/` é **agnóstico de ferramenta**. Cada adapter só ap
 
 | Ferramenta | Path no projeto | Fonte |
 |------------|-----------------|-------|
-| Cursor | `.cursor/rules/harness-sdd.mdc` | [cursor/](./cursor/) |
+| Cursor | `.cursor/rules/*.mdc` (harness-sdd, opensource-first, rich-domain) | [cursor/](./cursor/) |
 | GitHub Copilot | `.github/copilot-instructions.md` | [github-copilot/](./github-copilot/) |
 | Claude Code | `CLAUDE.md` | [claude-code/](./claude-code/) |
 | Windsurf | `.windsurfrules` | [windsurf/](./windsurf/) |

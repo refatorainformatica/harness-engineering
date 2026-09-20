@@ -122,10 +122,9 @@ install_adapter() {
       return 0
       ;;
     cursor)
-      local dst="$TARGET/.cursor/rules/harness-sdd.mdc"
-      mkdir -p "$(dirname "$dst")"
-      cp -a "$ADAPTERS_ROOT/cursor/rules/harness-sdd.mdc" "$dst"
-      echo "  • Cursor → $dst"
+      mkdir -p "$TARGET/.cursor/rules"
+      cp -a "$ADAPTERS_ROOT/cursor/rules/"*.mdc "$TARGET/.cursor/rules/"
+      echo "  • Cursor → $TARGET/.cursor/rules/*.mdc"
       ;;
     copilot|github-copilot)
       local dst="$TARGET/.github/copilot-instructions.md"

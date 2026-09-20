@@ -1,0 +1,21 @@
+---
+description: Domínio rico (DDD) — sem domínio anêmico
+globs:
+  - "**/*.cs"
+  - "**/*.dart"
+alwaysApply: false
+---
+
+# Domínio rico
+
+Quando o projeto usa DDD / Clean Architecture (`.ai-harness/Governance/architecture.md` + `Knowledge/Standards.md`):
+
+- Entidades/aggregates com comportamento (factories + métodos de domínio)
+- Invariantes e transições validadas no domínio
+- Value Objects para conceitos com regras
+- Exceções de domínio explícitas
+- Application/API **orquestra**; não seta status/campos internos
+
+Proibido: `entity.Status = …` / `entity.Score = …` na Application. Use `entity.Complete(…)` (ou equivalente).
+
+Nunca mockar Entities/Value Objects em testes de domínio.

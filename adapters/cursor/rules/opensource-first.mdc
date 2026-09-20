@@ -1,0 +1,14 @@
+---
+description: Preferir OSS/self-host; cloud proprietário só com ADR
+alwaysApply: true
+---
+
+# Open Source First
+
+Ordem obrigatória (`.ai-harness/Governance/cost.md`):
+
+1. Biblioteca/modelo open source (local ou self-hosted)
+2. API/serviço OSS auto-hospedado
+3. Cloud proprietário **somente** com ADR motivando o gap
+
+Ao propor arquitetura, liste a opção OSS **antes** de qualquer serviço pago. Não adicione SDK de cloud sem justificar a ausência de alternativa.

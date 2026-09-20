@@ -19,7 +19,8 @@ Níveis:
 | Escrever Runtime/state | auto | |
 | Sandbox worktree | ask | Exceto se a tarefa pedir isolamento |
 | `git commit` / `git push` | ask | |
-| Adicionar dependências | ask | |
+| Adicionar dependências | ask | Preferir OSS (`cost.md`) |
+| Cloud proprietário / LLM pago | ask | Só com ADR motivando o gap |
 | Deploy / release / produção | ask | Alto impacto: confirmação reforçada |
 | Apagar arquivos de produto | ask | |
 | Force push / reset --hard / secrets | deny | |

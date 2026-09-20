@@ -381,7 +381,7 @@ Ver [template.md](./template.md).
 # ── Governance ──────────────────────────────────────────────────────────────
 
 
-def write_governance(repo: Path, harness: Path, stack: dict, integrations: list[str], readme: str) -> None:
+def write_governance(repo: Path, harness: Path, stack: dict, integrations: list[str], _readme: str) -> None:
     has_ai = any(x in " ".join(integrations).lower() for x in ("ollama", "llm", "semantic", "openai", "whisper", "ai"))
     has_cloud = any(x in " ".join(integrations).lower() for x in ("firebase", "gcp", "firestore", "aws", "azure"))
     has_secrets = any(
@@ -394,86 +394,38 @@ def write_governance(repo: Path, harness: Path, stack: dict, integrations: list[
         )
     )
 
-    sec_rules = [
-        "Não commitutar secrets, credentials, keystores ou service accounts.",
-        "Não logar tokens, PII ou payloads sensíveis.",
-        "Dependências novas: avaliar CVE / licença antes do merge.",
-    ]
+    extra: list[str] = []
     if has_secrets or "firebase" in " ".join(integrations).lower():
-        sec_rules.append("Arquivos locais de config (`dart_defines`, `appsettings`, service accounts) permanecem gitignored.")
+        extra.append("Arquivos locais de config (`dart_defines`, `appsettings`, service accounts) permanecem gitignored.")
     if has_ai:
-        sec_rules.append("Prompts não podem incluir dados sensíveis de produção sem autorização.")
-        sec_rules.append("Modelos externos: preferir OSS/local; cloud proprietário só com gap documentado (ADR).")
-    if "firestore" in " ".join(integrations).lower() or "e2e" in readme.lower():
-        sec_rules.append("Dados clínicos/sensíveis só como blobs criptografados — nunca texto plano no remoto.")
+        extra.append("Feature de IA detectada — prompts sem dados de produção; modelos OSS/local primeiro.")
     if stack.get("dotnet"):
-        sec_rules.append("Domain rico: estado muda via métodos de domínio; Application não seta campos internos.")
+        extra.append("Stack .NET: aplicar domínio rico (`Governance/architecture.md`).")
 
-    write(
-        harness / "Governance/security.md",
-        f"""# Governance — Security ({repo.name})
-
-> Específico do projeto — gerado em {date.today().isoformat()}.
-
-## Regras
-
-{chr(10).join('- ' + r for r in sec_rules)}
-
-## Integrações sob controle
-
-{chr(10).join('- ' + i for i in integrations) if integrations else '- Ver Knowledge/Architecture.md'}
-
-## Secrets
-
-| Tipo | Onde (esperado) | Git |
-|------|-----------------|-----|
-| Env / defines | `.env`, `config/*` local | gitignored |
-| Cloud keys | service accounts / dart_defines | gitignored |
-| Tokens CI | secrets do provedor CI | fora do repo |
-
-## IA
-
-- Humano aprova commit/push/release (`ask`)
-- Decisões críticas com aprovação humana
-{"- Guardrails de entrada/saída nas features de IA" if has_ai else "- Sem feature de IA detectada — revisar se isso mudar"}
-""",
+    sec_body = (
+        f"Gerado em {date.today().isoformat()} para `{repo.name}`.\n\n"
+        f"**Integrações detectadas:** {', '.join(integrations) if integrations else 'ver Knowledge/Architecture.md'}\n\n"
+        + (("**Notas:**\n" + "\n".join(f"- {r}" for r in extra) + "\n") if extra else "")
+        + "A baseline canônica (secrets, PII, OSS, IA) permanece nas seções acima — este overlay não a substitui.\n"
     )
+    fill.upsert_project_section(harness / "Governance/security.md", "Projeto (detectado)", sec_body)
 
-    cost_rows = []
+    cost_bits = [
+        f"Gerado em {date.today().isoformat()} para `{repo.name}`.",
+        "Preferência OSS da baseline permanece obrigatória.",
+    ]
     if has_cloud:
-        cost_rows.append("| Cloud (Firebase/GCP/etc.) | Preferir free tier / self-host; upgrade de SKU = **ask** |")
+        cost_bits.append("Cloud detectado: free tier / self-host; upgrade de SKU = **ask**.")
     if has_ai:
-        cost_rows.append("| Tokens LLM | Preferir Ollama/local; APIs pagas só com autorização |")
+        cost_bits.append("IA detectada: Ollama/local primeiro; API paga só com autorização.")
     if stack.get("dotnet") or stack.get("flutter"):
-        cost_rows.append("| CI / build | Rodar testes focados no escopo da feature, não a suíte inteira a cada iteração |")
-    cost_rows.append("| Agente (loops) | Máx. ~12 iterações/run; evitar rebuilds caros em loop |")
+        cost_bits.append("CI: testes do escopo da feature, não a suíte inteira a cada iteração.")
     if "docker" in " ".join(integrations).lower():
-        cost_rows.append("| Containers | Não subir stacks compose completas só para um teste unitário |")
-
-    write(
+        cost_bits.append("Não subir stack compose completa só para teste unitário.")
+    fill.upsert_project_section(
         harness / "Governance/cost.md",
-        f"""# Governance — Cost ({repo.name})
-
-> FinOps / custo de compute e tokens — gerado em {date.today().isoformat()}.
-
-## Políticas
-
-{chr(10).join(cost_rows)}
-
-## Preferência OSS
-
-1. Biblioteca/modelo open source (local ou self-hosted)
-2. API/serviço OSS auto-hospedado
-3. Cloud proprietário **somente** com ADR motivando o gap
-
-## Limites sugeridos (ajuste à empresa)
-
-| Recurso | Política |
-|---------|----------|
-| Cloud SKU | sem upgrade sem `ask` |
-| CI minutos | testes do escopo da run |
-| Tokens LLM | local primeiro; pago com autorização |
-""",
+        "Projeto (detectado)",
+        "\n".join(f"- {b}" for b in cost_bits) + "\n",
     )
 
 
@@ -496,35 +448,16 @@ def write_agents_workflows(repo: Path, harness: Path, stack: dict) -> None:
         code_root = "."
 
     write(
-        harness / "Agents/README.md",
-        f"""# Agents — {repo.name}
+        harness / "Agents/project.md",
+        f"""# Project context — {repo.name}
 
-Papéis customizados para este repositório.
+> Gerado por enrich-harness em {date.today().isoformat()}. Os papéis em `developer.md` / `tester.md` **não** são substituídos.
 
-| Papel | Arquivo | Foco neste projeto |
-|-------|---------|-------------------|
-| Architect | [architect.md](./architect.md) | ADR + `Knowledge/Architecture.md` |
-| Developer | [developer.md](./developer.md) | Código em `{code_root}` |
-| Reviewer | [reviewer.md](./reviewer.md) | Diff vs Governance + AC-T* |
-| Tester | [tester.md](./tester.md) | `{test_c}` |
-
-Build de referência: `{build_c}`
-""",
-    )
-
-    write(
-        harness / "Agents/developer.md",
-        f"""# Agent — Developer ({repo.name})
-
-## Missão
-
-Implementar a Specification no código real deste repo.
-
-## Paths canônicos
+## Paths
 
 - Código: `{code_root}`
 - Specs: `Specification/features/<id>/`
-- Knowledge: `Knowledge/`
+- Testes: pasta da feature (`Knowledge/Standards.md`)
 
 ## Comandos (`auto`)
 
@@ -533,94 +466,10 @@ Implementar a Specification no código real deste repo.
 {test_c}
 ```
 
-## Faz
+## Notas
 
-- Editar só o escopo da feature/run
-- Atualizar requirements/use-cases/acceptance se o comportamento mudou
-- Rodar testes mapeados no `acceptance.md` (AC-T*)
-
-## Não faz
-
-- Commit/push sem `ask`
-- Redesign sem Architect + ADR
-- Expandir escopo para “desbloquear”
-
-## Checklist
-
-- [ ] SPEC lida
-- [ ] Implementação
-- [ ] `{test_c}` no escopo
-- [ ] Handoff Tester/Reviewer
-""",
-    )
-
-    write(
-        harness / "Agents/tester.md",
-        f"""# Agent — Tester ({repo.name})
-
-## Missão
-
-Provar os AC-T* do `acceptance.md` com os testes do repositório.
-
-## Comando padrão
-
-```bash
-{test_c}
-```
-
-## Faz
-
-- Mapear AC → arquivo de teste
-- Rodar só o escopo da feature
-- Registrar resultado na tabela de evidências do acceptance
-- Se AC-G* (lacuna): criar stub/teste mínimo e regenerar acceptance
-
-## Checklist
-
-- [ ] AC-T* executados
-- [ ] Falhas no LOG da run
-- [ ] Handoff Reviewer
-""",
-    )
-
-    write(
-        harness / "Workflows/feature.md",
-        f"""# Workflow — Feature ({repo.name})
-
-1. Run (`Runtime/RUN.md`) — workflow=`feature`
-2. Spec em `Specification/features/<id>/` (criar a partir de templates se nova)
-3. Architect se mudar boundaries → ADR
-4. Developer implementa em `{code_root}`
-5. Tester: `{test_c}` conforme acceptance
-6. Reviewer: Governance + Knowledge
-7. DONE; commit só com `ask`
-
-## DoR
-
-- [ ] requirements + use-cases + acceptance
-- [ ] Knowledge lido
-
-## DoD
-
-- [ ] AC-T* verdes (ou AC-G* justificado + stub criado)
-- [ ] STATUS=DONE
-""",
-    )
-
-    write(
-        harness / "Workflows/bug.md",
-        f"""# Workflow — Bug ({repo.name})
-
-1. Reproduzir (teste falhando preferencialmente)
-2. Fix mínimo no código (`{code_root}`)
-3. Tester: regressão `{test_c}`
-4. Reviewer: sem refactor de carona
-5. DONE
-
-## DoD
-
-- [ ] Teste de regressão existe (criar se AC-G*)
-- [ ] Fix no escopo
+- Aceite: AC-T* verdes ou AC-G* + stub na pasta da feature
+- OSS / cloud: `Governance/cost.md`
 """,
     )
 
@@ -671,10 +520,10 @@ void main() {{
             if not target:
                 continue
             safe = re.sub(r"[^A-Za-z0-9_]", "", fid.title().replace("-", "_")) or "Feature"
-            stub = target / f"{safe}HarnessGapTests.cs"
+            ns = target.name.replace("-", "_")
+            stub = target / "Features" / safe / f"{safe}HarnessGapTests.cs"
             if stub.exists():
                 continue
-            ns = target.name.replace("-", "_")
             write(
                 stub,
                 f"""// Stub gerado pelo enrich-harness — substitua por testes reais.
@@ -812,7 +661,7 @@ Atualizado por `enrich-harness.py` em {date.today().isoformat()}.
 
 
 def main() -> int:
-    base = Path("/home/desenvolvedor/Projects/Refatora")
+    base = fill.DEFAULT_WORKSPACE
     if len(sys.argv) > 1:
         repos = [Path(p).resolve() for p in sys.argv[1:]]
     else:

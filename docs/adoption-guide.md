@@ -30,9 +30,11 @@ python3 /caminho/harness-engineering/scripts/enrich-harness.py /caminho/projeto 
 
 | Script | Faz |
 |--------|-----|
-| `fill-harness.py` | Knowledge/Tools/INDEX básicos |
+| `fill-harness.py` | Knowledge/Tools/INDEX + overlay de stack (não apaga regras canônicas) |
 | `deep-fill-harness.py` | Specs + **acceptance = testes unitários** |
-| `enrich-harness.py` | ADR, glossário do código, use-cases dos testes, Governance cost/security do projeto, Agents/Workflows customizados, stubs de teste nas lacunas |
+| `enrich-harness.py` | ADR, glossário, use-cases, overlay Governance, `Agents/project.md`, stubs AC-G* na pasta da feature |
+
+Regras canônicas da frota: [rules-baseline.md](./rules-baseline.md). `fill`/`enrich` **não** substituem Agents, Workflows nem a baseline de Governance.
 
 Revise ADR e glossário — ainda pedem curadoria humana pontual.
 

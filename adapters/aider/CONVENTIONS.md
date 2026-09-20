@@ -10,3 +10,6 @@ Before editing code, read `.ai-harness/AGENTS.md`.
 
 Do not commit unless the user explicitly requested it.
 Update acceptance criteria when behavior changes.
+Organize code and tests always by feature (`.ai-harness/Knowledge/Standards.md`).
+Prefer OSS; proprietary cloud only with ADR (`.ai-harness/Governance/cost.md`).
+Acceptance = AC-T* or AC-G* + stub.

@@ -11,3 +11,7 @@ Follow `.ai-harness/AGENTS.md` for any code or spec change.
 
 Do not commit, push, or touch secrets unless explicitly allowed.
 Ambiguous spec → BLOCKED and ask.
+
+**Feature-first (mandatory):** organize code and tests by business feature (`Features/<Name>/`, `test/features/<id>/`, …). See `.ai-harness/Knowledge/Standards.md`. Legacy migrates when touched.
+
+**OSS-first:** open source → self-host → proprietary cloud only with ADR (`.ai-harness/Governance/cost.md`). Acceptance = AC-T* tests or AC-G* gap + stub.

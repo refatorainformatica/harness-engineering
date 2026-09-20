@@ -6,7 +6,7 @@ Verdade **estável** do sistema. Muda com ADR ou decisão explícita — não a 
 |-----------|----------|
 | [Architecture.md](./Architecture.md) | Estilo, pastas, DI, fluxos, mapa harness ↔ código |
 | [Domain.md](./Domain.md) | Glossário, linguagem ubíqua, limites de contexto |
-| [Standards.md](./Standards.md) | Padrões de código, naming, testing, docs |
+| [Standards.md](./Standards.md) | Código, **organização por feature**, domínio rico, naming, docs |
 | [ADR/](./ADR/) | Architecture Decision Records |
 
 ## Regras

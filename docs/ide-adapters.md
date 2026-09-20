@@ -4,7 +4,7 @@ O harness (`.ai-harness/`) é a fonte da verdade. Adapters são ponteiros curtos
 
 | ID | Ferramenta | Destino |
 |----|------------|---------|
-| `cursor` | Cursor | `.cursor/rules/harness-sdd.mdc` |
+| `cursor` | Cursor | `.cursor/rules/*.mdc` (sdd + OSS + domínio rico) |
 | `copilot` | GitHub Copilot | `.github/copilot-instructions.md` |
 | `claude` | Claude Code | `CLAUDE.md` |
 | `windsurf` | Windsurf | `.windsurfrules` |
