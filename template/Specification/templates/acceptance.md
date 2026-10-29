@@ -1,29 +1,29 @@
 # Acceptance Criteria — <id>
 
-> **Fonte da verdade:** testes unitários do repositório/solução. Cada AC-Txx = um teste existente.
+> **Source of truth:** the repository/solution unit tests. Each AC-Txx = one existing test.
 
-## Comando de validação (escopo)
+## Validation command (scope)
 
 ```bash
-# Ex.: dotnet test … --filter FullyQualifiedName~Features.<Name>
-# Ex.: flutter test test/features/<id>/
+# E.g.: dotnet test … --filter FullyQualifiedName~Features.<Name>
+# E.g.: flutter test test/features/<id>/
 ```
 
-## Critérios (= testes existentes)
+## Criteria (= existing tests)
 
-- [ ] AC-T01 — `Features/<FeatureName>/…` ou `test/features/<id>/…` :: nome do teste
-- [ ] AC-P01 — Use cases coerentes com os testes acima
-- [ ] AC-P02 — Sem violação de Knowledge / Governance
-- [ ] AC-P03 — Testes na pasta da feature (`Standards.md`)
+- [ ] AC-T01 — `Features/<FeatureName>/…` or `test/features/<id>/…` :: test name
+- [ ] AC-P01 — Use cases consistent with the tests above
+- [ ] AC-P02 — No violation of Knowledge / Governance
+- [ ] AC-P03 — Tests in the feature folder (`standards.md`)
 
-## Evidências
+## Evidence
 
-| AC | Teste | Arquivo | Comando | Resultado |
-|----|-------|---------|---------|-----------|
+| AC | Test | File | Command | Result |
+|----|------|------|---------|--------|
 | AC-T01 | … | `…` | `…` | pending |
 
-## Lacunas (AC-G*)
+## Gaps (AC-G*)
 
-- Comportamento sem teste automatizado → **AC-Gxx** + stub mínimo **na pasta da feature**; regenerar este arquivo.
-- DoD de feature: AC-T\* verdes **ou** AC-G\* justificado + stub criado.
-- Não marcar DONE só com AC-P\* de processo.
+- Behavior without an automated test → **AC-Gxx** + minimal stub **in the feature folder**; regenerate this file.
+- Feature DoD: AC-T\* green **or** AC-G\* justified + stub created.
+- Do not mark DONE with only process AC-P\*.

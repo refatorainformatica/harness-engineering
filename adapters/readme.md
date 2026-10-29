@@ -1,22 +1,6 @@
-# Adapters de IDE / Agentes
+# Adapters
 
-O harness em `.ai-harness/` é **agnóstico de ferramenta**. Cada adapter só aponta para `.ai-harness/AGENTS.md`.
+The harness in `.ai-harness/` is **tool-agnostic**. Each adapter only points a specific tool at `.ai-harness/agents.md`. Install them with `scripts/init-harness.sh` in the **target project**, not in this kit.
 
-| Ferramenta | Path no projeto | Fonte |
-|------------|-----------------|-------|
-| Cursor | `.cursor/rules/*.mdc` (harness-sdd, opensource-first, rich-domain) | [cursor/](./cursor/) |
-| GitHub Copilot | `.github/copilot-instructions.md` | [github-copilot/](./github-copilot/) |
-| Claude Code | `CLAUDE.md` | [claude-code/](./claude-code/) |
-| Windsurf | `.windsurfrules` | [windsurf/](./windsurf/) |
-| Continue | `.continue/rules/harness-sdd.md` | [continue/](./continue/) |
-| Aider | `CONVENTIONS.md` | [aider/](./aider/) |
-| Codex / genéricos | `AGENTS.md` | [agents-md/](./agents-md/) |
-| JetBrains AI | `.aiassistant/rules/harness.md` | [jetbrains/](./jetbrains/) |
-
-```bash
-./scripts/init-harness.sh /proj MeuApp --adapters=cursor,copilot,claude
-./scripts/init-harness.sh /proj MeuApp --adapters=all
-./scripts/init-harness.sh /proj MeuApp --adapters=none
-```
-
-Detalhes: [../docs/ide-adapters.md](../docs/ide-adapters.md).
+- Single source: [source/harness.md](./source/harness.md). Generated files: `python3 scripts/build-adapters.py` (never edit them by hand).
+- Destination names per tool: [../docs/ide-adapters.md](../docs/ide-adapters.md).

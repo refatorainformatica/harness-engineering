@@ -1,13 +1,13 @@
 # Acceptance Criteria — example
 
-## Critérios
+## Process criteria
 
-- [ ] Pasta `example` removida ou substituída por feature real
-- [ ] Feature real registrada em `INDEX.md`
-- [ ] Sem violação de `Governance/` e `Knowledge/`
+- [ ] Folder `example` removed or replaced by a real feature
+- [ ] Real feature registered in `index.md`
+- [ ] No violation of `Governance/` and `Knowledge/`
 
-## Evidências
+## Evidence
 
-| Critério | Como validar | Resultado |
-|----------|--------------|-----------|
-| … | … | pending |
+| AC | Test | File | Command | Result |
+|----|------|------|---------|--------|
+| … | … | `…` | `…` | pending |

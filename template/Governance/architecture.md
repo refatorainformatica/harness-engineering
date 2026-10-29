@@ -1,29 +1,30 @@
 # Governance — Architecture
 
-## Regras base
+## Baseline rules
 
-- Seguir `Knowledge/Architecture.md` e `Standards.md`.
-- **Organização por feature (obrigatório):** código e testes novos por capacidade de negócio (`Features/<Name>/`, `lib/features/<id>/`, `test/features/<id>/`, …). Legado migra ao ser tocado. Ver `Standards.md`.
-- Mudança estrutural → ADR em `Knowledge/ADR/`.
-- Não introduzir camada/padrão novo sem Architect + aceite.
-- Preferência OSS para deps e infra (`Governance/cost.md`). Cloud proprietário só com ADR.
+- Follow `Knowledge/architecture.md` and `standards.md`.
+- **Feature-first organization (mandatory):** new code and tests per business capability (`Features/<Name>/`, `lib/features/<id>/`, `test/features/<id>/`, …). Legacy code migrates when touched. See `standards.md`.
+- Structural change → ADR in `Knowledge/ADR/`.
+- Do not introduce a new layer/pattern without Architect + acceptance.
+- OSS preference for deps and infra (`Governance/cost.md`). Proprietary cloud only with an ADR.
 
-## Domínio rico (quando o estilo for DDD / Clean Architecture)
+## Rich domain model (always — mandatory)
 
-- Estado muda só via métodos e factories de domínio; Application/API **não** seta campos internos.
-- Value Objects para conceitos com invariantes; exceções de domínio explícitas.
-- Repositórios: interfaces no Domain; persistência na Infrastructure.
-- Nunca domínio anêmico (DTO com setters e lógica na Application).
+- State changes only through domain methods and factories; Application/API does **not** set internal fields.
+- Value Objects for concepts with invariants; explicit domain exceptions.
+- Repositories: interfaces in Domain; persistence in Infrastructure.
+- Never an anemic domain (DTO with setters and logic in Application).
+- DDD: rules and validations inside aggregates, entities and value objects; Bounded Contexts are not coupled through shared domain models.
 
 ## Gates
 
-- [ ] Alinhado ao estilo documentado
-- [ ] Código e testes na pasta da feature
-- [ ] ADR quando aplicável (inclui cloud proprietário)
-- [ ] Sem acoplamento proibido (listar abaixo)
+- [ ] Aligned with the documented style
+- [ ] Code and tests in the feature folder
+- [ ] ADR when applicable (includes proprietary cloud)
+- [ ] No forbidden coupling (list below)
 
-## Acoplamentos / imports proibidos
+## Forbidden coupling / imports
 
-- Lógica de negócio de uma feature fora da pasta da feature (ex.: helpers compartilhados com regras de feature)
-- Application/API setando estado interno de entidade de domínio
+- A feature's business logic outside the feature folder (e.g. shared helpers with feature rules)
+- Application/API setting the internal state of a domain entity
 - …

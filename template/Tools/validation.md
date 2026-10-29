@@ -1,12 +1,15 @@
 # Tools — Validation
 
-| ID | Ação | Notas |
-|----|------|-------|
-| `lint` | linter / analyze nos tocados | auto |
+| ID | Action | Notes |
+|----|--------|-------|
+| `lint` | linter / analyze on touched files | auto |
 | `typecheck` | typecheck / compile dry | auto |
-| `security.scan` | SAST / dep scan do projeto | **ask** se pesado ou publicar relatório |
-| `harness.spec.read` | Ler `.ai-harness/**` | auto |
-| `harness.spec.write` | Atualizar Specification/Knowledge | auto se comportamento/decisão mudou |
-| `harness.state.write` | Escrever Runtime/state | auto |
+| `security.scan` | project SAST / dependency scan | **ask** if heavy or publishing a report |
+| `harness.check` | `python3 .ai-harness/Tools/bin/check-harness.py [--diff <base>]` | auto — harness structure + rules on the diff |
+| `harness.coverage` | `python3 .ai-harness/Tools/bin/check-harness.py --coverage "<report glob>"` | auto — ≥ 80% line per testable artifact |
+| `harness.check.hook` | `python3 .ai-harness/Tools/bin/check-harness.py --install-hook` | **ask** — installs git pre-commit |
+| `harness.spec.read` | Read `.ai-harness/**` | auto |
+| `harness.spec.write` | Update Specification/Knowledge | auto if behavior/decision changed |
+| `harness.state.write` | Write Runtime/state | auto |
 
-Adicione gates da empresa (policy-as-code, contract tests, etc.) com IDs estáveis.
+Add company gates (policy-as-code, contract tests, etc.) with stable IDs.

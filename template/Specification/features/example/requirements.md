@@ -1,30 +1,30 @@
 # Requirements — example
 
-| Campo | Valor |
+| Field | Value |
 |-------|-------|
 | Feature | example |
 | Status | planned |
 | Owners | engineering |
 
-## Intenção
+## Intent
 
-Exemplo de bootstrap do harness. **Substitua** por features reais.
+Harness bootstrap example. **Replace** it with real features.
 
-## Requisitos funcionais
+## Functional requirements
 
-1. RF-01 — Serve apenas como modelo de estrutura.
-2. RF-02 — Deve ser removido ou renomeado na adoção.
+1. FR-01 — Serves only as a structure template.
+2. FR-02 — Must be removed or renamed on adoption.
 
-## Requisitos não-funcionais (overrides)
+## Non-functional requirements (overrides)
 
-- Ver `Governance/quality.md` + `Knowledge/Standards.md`
-- Overrides desta feature: nenhum
+- See `Governance/quality.md` + `Knowledge/standards.md`
+- Overrides for this feature: none
 
-## Fora de escopo
+## Out of scope
 
-- Qualquer comportamento de produção
+- Any production behavior
 
-## Dependências
+## Dependencies
 
 - Knowledge: Architecture, Domain
 - Features: —

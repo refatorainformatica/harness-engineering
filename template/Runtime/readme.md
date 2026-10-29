@@ -1,10 +1,10 @@
 # Runtime
 
-Contrato de execução do agente (independente do IDE).
+Agent execution contract (independent of tool, IDE or model).
 
-| Artefato | Função |
-|----------|--------|
-| [RUN.md](./RUN.md) | Abrir/continuar uma run |
-| [LOOP.md](./LOOP.md) | Estados até DONE/BLOCKED/FAILED |
-| [state/](./state/) | Persistência entre turns |
-| [sandbox/](./sandbox/) | Isolamento via worktree |
+| Artifact | Purpose |
+|----------|---------|
+| [run.md](./run.md) | Open/continue a run |
+| [loop.md](./loop.md) | States until DONE/BLOCKED/FAILED |
+| [state/](./state/) | Persistence across turns |
+| [sandbox/](./sandbox/) | Isolation via worktree |

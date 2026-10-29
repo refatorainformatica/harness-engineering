@@ -1,20 +1,26 @@
 # Project context — {{PROJECT}}
 
-> Preenchido por `enrich-harness.py` (não substitui os papéis). Developer e Tester **leem** este arquivo para paths e comandos.
+> Filled by `enrich-harness.py` (does not replace the roles). Developer and Tester **read** this file for paths and commands.
 
 ## Paths
 
-- Código: (preencher — pasta da feature)
+- Code: (fill in — feature folder)
 - Specs: `Specification/features/<id>/`
-- Testes: pasta da feature (`Knowledge/Standards.md`)
+- Tests: feature folder (`Knowledge/standards.md`)
 
-## Comandos (`auto`)
+## Active stack packs
+
+Read **only** these (`Knowledge/stacks/readme.md`) — fill/enrich detect them:
+
+- (fill in, e.g. `Knowledge/stacks/dotnet.md`)
+
+## Commands (`auto`)
 
 ```bash
-# build / test do escopo — fill/enrich preenchem
+# scope build / test — filled by fill/enrich
 ```
 
-## Notas
+## Notes
 
-- Stack e gates: `Tools/` + `Governance/quality.md`
+- Stack and gates: `Tools/` + `Governance/quality.md`
 - OSS / cloud: `Governance/cost.md`

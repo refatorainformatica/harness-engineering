@@ -1,23 +1,27 @@
 # Workflow — Bug
 
-Corrigir defeito com reprodução e regressão controlada.
+Fix a defect with reproduction and controlled regression.
 
-## Passos
+## Steps
 
-1. Run + CONTEXT (sintoma, severidade, feature id se conhecida).
-2. Reproduzir (Tester/Developer) — evidência no LOG.
-3. Se causa for arquitetural → Architect; senão Developer no menor fix **na pasta da feature**.
-4. Tester: teste de regressão que falharia antes / passa depois (criar se **AC-G\***).
-5. Reviewer: escopo mínimo, sem “refactor de carona”.
-6. DONE com link ao sintoma original.
+1. Run + CONTEXT (symptom, severity, feature id if known).
+2. Reproduce (Tester/Developer) — evidence in the LOG.
+3. If the cause is architectural → Architect; otherwise Developer applies the smallest fix **in the feature folder**.
+4. Tester: regression test that would fail before / passes after (create it if **AC-G\***).
+5. Reviewer: minimal scope, no "drive-by refactoring".
+6. DONE with a link to the original symptom.
 
 ## DoR
 
-- [ ] Sintoma claro e passos de reprodução
-- [ ] Impacto / severidade estimados
+- [ ] Changes to existing business rules identified and confirmed by a human
+- [ ] Clear symptom and reproduction steps
+- [ ] Impact / severity estimated
 
 ## DoD
 
-- [ ] Fix no escopo
-- [ ] Teste de regressão existe (criar se AC-G\*) na pasta da feature
+- [ ] Fix within scope
+- [ ] Regression test exists (create it if AC-G\*) in the feature folder
+- [ ] Unit tests for every new/changed behavior; coverage ≥ 80% line on every testable artifact
+- [ ] Security baseline S1–S12 verified (`Governance/security.md`) — evidence in the log
+- [ ] Logging verification L1–L8 (`Knowledge/standards.md#logging`) — evidence in the log
 - [ ] STATUS = DONE

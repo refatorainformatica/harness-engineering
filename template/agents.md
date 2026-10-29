@@ -1,53 +1,58 @@
-# AGENTS — Entrypoint do AI Engineering Harness
+# AGENTS — AI Engineering Harness entrypoint
 
-Obrigatório para **qualquer** agente (Cursor, Copilot, Claude Code, Windsurf, Continue, Aider, JetBrains AI, Codex, etc.).
+Mandatory for **any** AI agent or person changing this repository — regardless of tool, IDE or model.
 
-## Protocolo de toda tarefa
+## Protocol for every task
 
-1. **Run** — criar/continuar `.ai-harness/Runtime/state/runs/<run-id>/` ([Runtime/RUN.md](./Runtime/RUN.md)).
-2. **Workflow** — escolher em [Workflows/](./Workflows/): `feature` | `bug` | `refactoring` | `migration`.
-3. **Knowledge** — ler o que for relevante em [Knowledge/](./Knowledge/) (Architecture, Domain, Standards, ADR). **Código e testes sempre por feature** (`Standards.md`).
-4. **Specification** — ler `Specification/features/<id>/` (requirements, use-cases, acceptance). Aceite = **AC-T\*** (teste) ou **AC-G\*** (lacuna + stub).
-5. **Governance** — aplicar [Governance/](./Governance/) + [permissions](./Governance/permissions.md). **OSS primeiro** (`cost.md`); secrets nunca.
-6. **Agent role** — assumir o papel adequado em [Agents/](./Agents/) (pode haver handoff na mesma run).
-7. **Tools** — só IDs em [Tools/](./Tools/) com nível `auto` | `ask` | `deny`.
-8. **Loop** — [Runtime/LOOP.md](./Runtime/LOOP.md) até `DONE` | `BLOCKED` | `FAILED`.
-9. **Sandbox** — se WIP alheio ou risco: [Runtime/sandbox/README.md](./Runtime/sandbox/README.md).
+1. **Run** — create/continue `.ai-harness/Runtime/state/runs/<run-id>/` ([Runtime/run.md](./Runtime/run.md)).
+2. **Workflow** — choose from [Workflows/](./Workflows/): `feature` | `bug` | `refactoring` | `migration` | `infra`.
+3. **Knowledge** — read what is relevant in [Knowledge/](./Knowledge/) (architecture, domain, standards, ADR) + **only** the active stack pack (`Knowledge/stacks/`, see `Agents/project.md`). **Code and tests always by feature** (`standards.md`).
+4. **Specification** — read `Specification/features/<id>/` (requirements, use-cases, acceptance). Acceptance = **AC-T\*** (test) or **AC-G\*** (gap + stub).
+5. **Governance** — apply [Governance/](./Governance/) + [permissions](./Governance/permissions.md). **OSS first** (`cost.md`); secrets never.
+6. **Agent role** — take the appropriate role in [Agents/](./Agents/) (handoff within the same run is allowed).
+7. **Tools** — only IDs in [Tools/](./Tools/) with level `auto` | `ask` | `deny`.
+8. **Loop** — [Runtime/loop.md](./Runtime/loop.md) until `DONE` | `BLOCKED` | `FAILED`.
+9. **Sandbox** — if there is someone else's WIP or risk: [Runtime/sandbox/readme.md](./Runtime/sandbox/readme.md).
 
-## Handoff de papéis (na mesma run)
+## Role handoff (same run)
 
-| Situação | Papel |
-|----------|-------|
-| Decisão de desenho / ADR / limites | [Architect](./Agents/architect.md) |
-| Implementação no escopo da spec | [Developer](./Agents/developer.md) |
+| Situation | Role |
+|-----------|------|
+| Design decision / ADR / boundaries | [Architect](./Agents/architect.md) |
+| Implementation within the spec scope | [Developer](./Agents/developer.md) |
 | Diff vs Knowledge + Governance | [Reviewer](./Agents/reviewer.md) |
-| Estratégia e evidência de testes | [Tester](./Agents/tester.md) |
+| Test strategy and evidence | [Tester](./Agents/tester.md) |
 
-Registre handoffs no `LOG.md` da run.
+Record handoffs in the run's `log.md`.
 
-## Regras canônicas (frota)
+## Canonical rules
 
-- Feature-first: código e testes na pasta da feature; legado migra ao ser tocado.
-- OSS-first: open source → self-host → cloud proprietário só com ADR.
-- Não expandir escopo para desbloquear; máx. ~12 iterações/run.
-- Commit/push/secrets só conforme a matriz (`ask` / `deny`).
-- DDD: domínio rico; Application não seta campos internos.
+- Feature-first: code and tests in the feature folder; legacy code migrates when touched.
+- OSS-first: open source → self-host → proprietary cloud only with an ADR.
+- Do not expand scope to get unblocked; max. ~12 iterations/run.
+- Commit/push/secrets only as the matrix allows (`ask` / `deny`).
+- Rich domain always: business rules in entities/value objects; application code orchestrates and never sets internal state.
+- **Business-rule changes require confirmation**: if a task would change an existing business rule (behavior, invariant, calculation, validation, acceptance), stop in `BLOCKED` and ask before editing — never destroy a working implementation without need.
+- Code preservation, structure, logging, tests and documentation: single source in [Knowledge/standards.md](./Knowledge/standards.md) — no delivered docs, no DONE.
+- Execution in `auto` steps: edit instead of only analyzing, batches, idempotency — [Runtime/loop.md](./Runtime/loop.md#execution-bias-within-the-matrix). Never overrides `ask`/`deny`.
 
-## Ao concluir
+## On completion
 
+- Run `harness.check` ([Tools/validation.md](./Tools/validation.md)) and validate **all** applicable rules (Standards + Governance); record in the LOG
 - STATUS → `DONE`
-- Acceptance atualizado se o comportamento mudou (AC-T\* / AC-G\*)
-- ADR novo se houve decisão arquitetural ou vendor cloud
-- Resumir arquivos + como validar
+- Acceptance updated if the behavior changed (AC-T\* / AC-G\*)
+- New ADR if there was an architectural or cloud vendor decision
+- Summarize files + how to validate
 
-## Mapa rápido
+## Quick map
 
-| Precisa | Path |
-|---------|------|
+| Need | Path |
+|------|------|
 | Loop / Run | `Runtime/` |
 | Specs | `Specification/features/` |
-| Papéis | `Agents/` |
-| Processos | `Workflows/` |
-| Catálogo de ações | `Tools/` |
-| Políticas | `Governance/` |
-| Verdade do sistema | `Knowledge/` |
+| Roles | `Agents/` |
+| Processes | `Workflows/` |
+| Action catalog | `Tools/` |
+| Stack packs (language, framework, DevOps/cloud) | `Knowledge/stacks/` |
+| Policies | `Governance/` |
+| System truth | `Knowledge/` |

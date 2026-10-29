@@ -1,32 +1,32 @@
 # Requirements — <id>
 
-| Campo | Valor |
+| Field | Value |
 |-------|-------|
 | Feature | <id> |
 | Status | planned \| wip \| partial \| stable |
-| Código | `{{path}}/<id>` |
+| Code | `{{path}}/<id>` |
 | Owners | … |
 
-## Intenção
+## Intent
 
-O que o usuário consegue fazer / o sistema garante.
+What the user can do / what the system guarantees.
 
-## Requisitos funcionais
+## Functional requirements
 
-1. RF-01 — …
-2. RF-02 — …
+1. FR-01 — …
+2. FR-02 — …
 
-## Requisitos não-funcionais (overrides)
+## Non-functional requirements (overrides)
 
 - Baseline: Governance + Standards
 - Overrides: …
 
-## Fora de escopo
+## Out of scope
 
 - …
 
-## Dependências
+## Dependencies
 
 - Knowledge:
 - Features:
-- Integrações:
+- Integrations:

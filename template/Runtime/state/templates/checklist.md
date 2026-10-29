@@ -1,10 +1,10 @@
 # CHECKLIST
 
-- [ ] Workflow escolhido + Knowledge lido
+- [ ] Workflow chosen + Knowledge read
 - [ ] Specification (requirements / use-cases / acceptance)
-- [ ] Plano de arquivos / ADR se necessário
-- [ ] ACT (papel Developer ou Architect)
+- [ ] File plan / ADR if needed
+- [ ] ACT (Developer or Architect role)
 - [ ] VERIFY (Tester + Tools)
 - [ ] REVIEW (Reviewer + Governance)
-- [ ] UPDATE_SPEC / ADR se mudou
+- [ ] UPDATE_SPEC / ADR if changed
 - [ ] STATUS → DONE

@@ -1,12 +1,12 @@
 # AI Engineering Harness
 
-Template operacional de engenharia com IA para qualquer empresa ou produto.
+Layer installed from the **template** (kit repository). Entrypoint: [agents.md](./agents.md).
 
 ```text
 .ai-harness/
-├── Knowledge/        # Verdade estável do sistema
-├── Specification/    # O que entregar (por feature)
-├── Agents/           # Papéis (Architect, Developer, Reviewer, Tester)
+├── Knowledge/        # Stable system truth
+├── Specification/    # What to deliver (per feature)
+├── Agents/           # Roles (Architect, Developer, Reviewer, Tester)
 ├── Workflows/        # Feature, Bug, Refactoring, Migration
 ├── Tools/            # Build, Test, Git, Validation
 ├── Governance/       # Security, Quality, Architecture, Cost, Permissions
@@ -15,12 +15,12 @@ Template operacional de engenharia com IA para qualquer empresa ou produto.
 
 ## Entrypoint
 
-Todo agente começa em [AGENTS.md](./AGENTS.md).
+Every agent starts at [agents.md](./agents.md).
 
-## Checklist de capacidade
+## Capability checklist
 
-| Pilar | Onde |
-|-------|------|
+| Pillar | Where |
+|--------|-------|
 | Knowledge | [Knowledge/](./Knowledge/) |
 | Specification | [Specification/](./Specification/) |
 | Agents | [Agents/](./Agents/) |
@@ -29,9 +29,9 @@ Todo agente começa em [AGENTS.md](./AGENTS.md).
 | Governance | [Governance/](./Governance/) |
 | Runtime | [Runtime/](./Runtime/) |
 
-## Princípios
+## Principles
 
-- Spec antes de código — sem aceite claro → `BLOCKED`.
-- IA produz, humano aprova o que a matriz marca como `ask`.
-- Knowledge e Governance prevalecem sobre preferência do agente.
-- Workflow escolhe o papel; o papel não inventa o processo.
+- Spec before code — no clear acceptance → `BLOCKED`.
+- AI produces; a human approves what the matrix marks as `ask`.
+- Knowledge and Governance prevail over the agent's preference.
+- The workflow chooses the role; the role does not invent the process.

@@ -1,82 +1,116 @@
-# Guia de Adoção — AI Engineering Harness
+# Adoption guide — AI Engineering Harness
 
-## 1. Bootstrap
+This repository is the **template**. Any other repository adopts the harness by installing `.ai-harness/` from here.
 
-```bash
-./scripts/init-harness.sh /caminho/projeto MeuApp --adapters=cursor,copilot,claude
-```
+## 1. Install in the target project
 
-Instala `.ai-harness/` + adapters escolhidos + gitignore de runs.
-
-## 2. Preencher Knowledge (obrigatório)
-
-Manualmente ou em lote:
+From a clone of this kit:
 
 ```bash
-# Preenche Knowledge, Tools, Governance e INDEX a partir do README/estrutura
-python3 /caminho/harness-engineering/scripts/fill-harness.py /caminho/projeto
-
-# Todos os repos com .ai-harness/ sob Refatora
-python3 /caminho/harness-engineering/scripts/fill-harness.py
+./scripts/init-harness.sh /path/to/project MyApp                       # AGENTS.md adapter (default)
+./scripts/init-harness.sh /path/to/project MyApp --adapters=copilot,claude
+./scripts/init-harness.sh /path/to/project MyApp --adapters=none       # harness only
+./scripts/init-harness.sh /path/to/project MyApp --enrich              # install + infer Knowledge/specs
 ```
 
-Após o bootstrap, rode a cadeia de preenchimento:
+- Creates the project folder if needed and copies `template/` → `<project>/.ai-harness/`.
+- Installs the selected adapters under the file names each tool expects, never overwriting a project file that is not a harness file.
+- Writes `.ai-harness/.kit-version` and the `.gitignore` entries for ephemeral runs.
+- Does **not** copy this kit into the app.
+
+## 2. Update from the template
+
+When this kit evolves, in projects that already have the harness:
 
 ```bash
-python3 /caminho/harness-engineering/scripts/fill-harness.py /caminho/projeto
-python3 /caminho/harness-engineering/scripts/deep-fill-harness.py /caminho/projeto
-python3 /caminho/harness-engineering/scripts/enrich-harness.py /caminho/projeto   # 2º enriquecimento
+./scripts/init-harness.sh /path/to/project --update
 ```
 
-| Script | Faz |
-|--------|-----|
-| `fill-harness.py` | Knowledge/Tools/INDEX + overlay de stack (não apaga regras canônicas) |
-| `deep-fill-harness.py` | Specs + **acceptance = testes unitários** |
-| `enrich-harness.py` | ADR, glossário, use-cases, overlay Governance, `Agents/project.md`, stubs AC-G* na pasta da feature |
+| Updates | Preserves |
+|---------|-----------|
+| `agents.md`, Agents (roles), Workflows, Governance, Tools (incl. `bin/check-harness.py`), Runtime, Specification templates | Knowledge `architecture` / `domain` / `standards` |
+| Stack packs the project kept (all packs if it has none) | `Specification/features/` |
+| Adapters, when `--adapters=` is passed | `Agents/project.md` |
 
-Regras canônicas da frota: [rules-baseline.md](./rules-baseline.md). `fill`/`enrich` **não** substituem Agents, Workflows nem a baseline de Governance.
+The update also **migrates legacy upper-case file names** (kit < 1.1) to lower-case, including runs in progress; conflicting copies are kept as `<name>.legacy` for review. See [changelog.md](../changelog.md) for each version's migration notes.
 
-Revise ADR e glossário — ainda pedem curadoria humana pontual.
+Re-apply the stack overlay after an update:
 
-| Arquivo | Conteúdo |
-|---------|----------|
-| `Knowledge/Architecture.md` | Estilo e pastas reais |
-| `Knowledge/Domain.md` | Glossário, contextos, criticidade |
-| `Knowledge/Standards.md` | Código, testes, git, deps |
-| `Knowledge/ADR/` | Decisões duradouras |
+```bash
+python3 scripts/enrich-harness.py /path/to/project
+```
 
-## 3. Governance + Tools
+## 3. Fill in Knowledge
 
-- `Governance/*` — security, quality, architecture, cost, permissions
-- `Tools/*` — comandos reais da stack (remova o que não usa)
+By hand or:
 
-## 4. Primeiras features
+```bash
+python3 scripts/fill-harness.py /path/to/project
+python3 scripts/deep-fill-harness.py /path/to/project
+python3 scripts/enrich-harness.py /path/to/project
+```
 
-1. Copiar `Specification/templates/` → `features/<id>/`
-2. Registrar em `features/INDEX.md`
-3. Remover `features/example`
-4. Rodar workflow `Workflows/feature.md`
+Without arguments the scripts work on `.ai-harness/` **in the current directory** (not in this kit).
 
-## 5. Validar com qualquer agente
+| Script | Does |
+|--------|------|
+| `fill-harness.py` | Knowledge/Tools/index + stack overlay + active stack packs (never deletes canonical rules) |
+| `deep-fill-harness.py` | Specs + **acceptance = unit tests** |
+| `enrich-harness.py` | ADR, glossary, use cases, Governance overlay, `Agents/project.md`, AC-G* stubs in the feature folder |
 
-> Leia `.ai-harness/AGENTS.md`. Qual workflow e papel usaria para a feature X?
+| File | Content |
+|------|---------|
+| `Knowledge/architecture.md` | Style and real folders |
+| `Knowledge/domain.md` | Glossary, contexts, criticality |
+| `Knowledge/standards.md` | Code, tests, logging, docs, git, dependencies |
+| `Knowledge/stacks/` | Stack packs — delete the ones the project does not use |
+| `Knowledge/ADR/` | Lasting decisions (cloud provider, managed services, style) |
 
-Esperado: citar Runtime, Specification, Agents e permissions.
+Canonical rules: [rules-baseline.md](./rules-baseline.md).
 
-## Operação
+## 4. Governance, Tools and checks
 
-| Evento | Caminho |
-|--------|---------|
-| Nova feature | `Workflows/feature.md` |
+- `Governance/*` — security (S1–S12), quality (unit tests, ≥ 80% coverage), architecture, cost, permissions.
+- `Tools/*` — the real commands of your stack and infra (remove what you do not use).
+- Turn on the automated checks in whatever runs your pipeline:
+
+```bash
+python3 .ai-harness/Tools/bin/check-harness.py --diff origin/main
+python3 .ai-harness/Tools/bin/check-harness.py --coverage "<coverage report glob>"
+python3 .ai-harness/Tools/bin/check-harness.py --install-hook      # optional git pre-commit
+```
+
+## 5. First features
+
+1. Copy `Specification/templates/` → `features/<id>/`
+2. Register it in `features/index.md`
+3. Remove `features/example`
+4. Follow `Workflows/feature.md`
+
+## 6. Validate with any agent
+
+> Read `.ai-harness/agents.md`. Which workflow and role would you use for feature X?
+
+Expected: it cites Runtime, Specification, Agents, the active stack packs and permissions. For a measurable check, run the scenarios in [evals/](../evals/readme.md).
+
+## Operations
+
+| Event | Path |
+|-------|------|
+| New feature | `Workflows/feature.md` |
 | Bug | `Workflows/bug.md` |
-| Refactor | `Workflows/refactoring.md` |
+| Refactoring | `Workflows/refactoring.md` |
 | Migration | `Workflows/migration.md` |
-| Decisão arquitetural | `Knowledge/ADR/` + Architect |
+| Infrastructure / pipeline / cloud | `Workflows/infra.md` |
+| Architectural decision | `Knowledge/ADR/` + Architect |
+| Update the kit rules | `init-harness.sh <project> --update` |
 
-## Anti-padrões
+## Anti-patterns
 
-- Harness vazio (Knowledge nunca preenchido)
-- Tools com stack fantasma
-- Implementar sem acceptance
-- Agent “faz-tudo” sem declarar papel
-- Commit/push sem `ask`
+- Copying this whole repository into the product (use the script)
+- Empty harness (Knowledge never filled in)
+- Tools for a stack the project does not use; every stack pack left active
+- Implementing without acceptance or without unit tests
+- A "do-everything" agent that never declares its role
+- Changing a business rule without confirmation
+- Commit/push without `ask`; infra changed outside IaC

@@ -1,25 +1,28 @@
 # Workflow — Migration
 
-Mudança estrutural de dados, plataforma, dependência major ou cutover.
+Structural change of data, platform, major dependency or cutover.
 
-## Passos
+## Steps
 
-1. Run + CONTEXT (origem → destino, downtime, rollback).
-2. **Architect** obrigatório: plano, ADR, impacto Cost/Security.
-3. Spec de migração em `Specification/features/<id>/` (ou feature `migrate-*`).
-4. Developer: scripts/código de migração + dual-write/read se necessário.
-5. Tester: dry-run, validação de dados, rollback testado.
+1. Run + CONTEXT (source → target, downtime, rollback).
+2. **Architect** mandatory: plan, ADR, Cost/Security impact.
+3. Migration spec in `Specification/features/<id>/` (or a `migrate-*` feature).
+4. Developer: migration scripts/code + dual-write/read if needed.
+5. Tester: dry-run, data validation, tested rollback.
 6. Reviewer + Governance (security, cost, architecture).
-7. Execução em produção = sempre `ask` (e processo da empresa).
+7. Production execution = always `ask` (plus the company's process).
 
 ## DoR
 
-- [ ] ADR aceito (ou decisão humana registrada)
-- [ ] Plano de rollback
-- [ ] Janela / owners definidos
+- [ ] ADR accepted (or human decision recorded)
+- [ ] Rollback plan
+- [ ] Window / owners defined
 
 ## DoD
 
-- [ ] Dry-run evidenciado
-- [ ] Rollback testado ou aceito formalmente
-- [ ] STATUS = DONE (ou BLOCKED aguardando go-live humano)
+- [ ] Dry-run evidenced
+- [ ] Rollback tested or formally accepted
+- [ ] Unit tests for every new/changed behavior; coverage ≥ 80% line on every testable artifact
+- [ ] Security baseline S1–S12 verified (`Governance/security.md`) — evidence in the log
+- [ ] Logging verification L1–L8 (`Knowledge/standards.md#logging`) — evidence in the log
+- [ ] STATUS = DONE (or BLOCKED awaiting human go-live)

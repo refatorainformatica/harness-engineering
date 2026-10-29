@@ -1,6 +1,6 @@
 # CONTEXT
 
-## Pedido
+## Request
 
 > …
 
@@ -13,15 +13,15 @@
 - Workflow:
 - Specs: `Specification/features/<id>/`
 
-## Papel inicial
+## Initial role
 
 - …
 
-## Gates / criticidade
+## Gates / criticality
 
 - …
 
-## Isolamento
+## Isolation
 
-- [ ] repo raiz
+- [ ] repo root
 - [ ] sandbox: path=…

@@ -1,10 +1,10 @@
 # Use Cases — example
 
-## UC-01 — Bootstrap compreendido
+## UC-01 — Bootstrap understood
 
-- **Actor:** time de engenharia
-- **Given** o harness foi copiado para o projeto
-- **When** o time lê requirements / use-cases / acceptance
-- **Then** consegue criar uma feature real a partir dos templates
+- **Actor:** engineering team
+- **Given** the harness was copied into the project
+- **When** the team reads requirements / use-cases / acceptance
+- **Then** it can create a real feature from the templates
 
-## UC-02 — (adicione mais)
+## UC-02 — (add more)

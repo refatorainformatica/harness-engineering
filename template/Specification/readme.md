@@ -1,12 +1,12 @@
 # Specification
 
-O que o sistema deve **entregar**. Organizado por feature.
+What the system must **deliver**. Organized by feature.
 
 ```text
 Specification/
-├── README.md
+├── readme.md
 ├── features/
-│   ├── INDEX.md
+│   ├── index.md
 │   └── <id>/
 │       ├── requirements.md
 │       ├── use-cases.md
@@ -14,17 +14,17 @@ Specification/
 └── templates/
 ```
 
-## Status de feature
+## Feature status
 
-| Status | Significado |
-|--------|-------------|
-| `planned` | Spec existe; código ausente ou mínimo |
-| `wip` | Em branch ativa |
-| `partial` | Fluxo incompleto |
-| `stable` | Em uso na branch principal |
+| Status | Meaning |
+|--------|---------|
+| `planned` | Spec exists; code absent or minimal |
+| `wip` | On an active branch |
+| `partial` | Incomplete flow |
+| `stable` | In use on the main branch |
 
-## Regras
+## Rules
 
-1. Sem `acceptance.md` claro → não entrar em `ACT` (ficar em PLAN ou BLOCKED).
-2. Mudança de comportamento → atualizar requirements/use-cases/acceptance na mesma run.
-3. Use cases em Given/When/Then (ou equivalente BDD).
+1. No clear `acceptance.md` → do not enter `ACT` (stay in PLAN or BLOCKED).
+2. Behavior change → update requirements/use-cases/acceptance in the same run.
+3. Use cases in Given/When/Then (or equivalent BDD).

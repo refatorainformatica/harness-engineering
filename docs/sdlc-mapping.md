@@ -1,27 +1,28 @@
-# Mapeamento SDLC + IA ↔ AI Engineering Harness
+# SDLC + AI ↔ AI Engineering Harness mapping
 
-Adapte nomes de fases/gates ao modelo da sua empresa.
+Adapt phase and gate names to your company's model.
 
-| Fase | Gate (ex.) | Harness | Evidência |
-|------|------------|---------|-----------|
-| Descoberta | G1 | `Knowledge/Domain.md` | Criticidade no CONTEXT |
-| Arquitetura | G2 | Knowledge/Architecture + ADR | Specs `planned` |
-| Construção | G3 | Workflows + Agents Developer/Tester | Runs VERIFY no LOG |
-| Validação | G4 | Acceptance + Agent Reviewer | AC marcados; riscos no STATUS |
-| Release | G5 | Governance + permissions `ask` | Rollback conforme processo |
-| Evolução | G6 | INDEX + ADR review | Specs `stable`/`partial` |
+| Phase | Gate (e.g.) | Harness | Evidence |
+|-------|-------------|---------|----------|
+| Discovery | G1 | `Knowledge/domain.md` | Criticality in the run `context.md` |
+| Architecture | G2 | `Knowledge/architecture.md` + ADR + stack packs | Specs `planned` |
+| Build | G3 | Workflows + Developer/Tester roles | Unit tests, coverage ≥ 80%, VERIFY entries in the run log |
+| Validation | G4 | Acceptance + Reviewer role + `harness.check` | AC checked; S1–S12 and L1–L8 recorded; risks in `status.md` |
+| Release | G5 | Governance + `ask` permissions + `infra` workflow | Plan reviewed, apply approved, rollback per process |
+| Evolution | G6 | Feature index + ADR review + evals | Specs `stable`/`partial`; eval scorecard |
 
-## Controles de IA
+## AI controls
 
-| Controle | Onde |
-|----------|------|
-| Humano responsável | permissions `ask` |
-| Modelo / dados | Spec + Knowledge/Standards + security |
-| Guardrails / fallback | Specification + Governance/security |
-| Sem secrets em prompt | permissions deny + security |
-| Custo de tokens/cloud | Governance/cost.md |
+| Control | Where |
+|---------|-------|
+| Accountable human | `ask` permissions; business-rule changes need confirmation |
+| Model / data | Spec + `Knowledge/standards.md` + `Governance/security.md` |
+| Guardrails / fallback | Specification + `Governance/security.md` |
+| No secrets in prompts or code | `deny` permissions + security + `harness.check` secret scan |
+| Token / cloud cost | `Governance/cost.md` |
+| Rule adherence per agent/model | [evals/](../evals/readme.md) |
 
 ## DoR / DoD
 
-**Ready:** acceptance claro, Knowledge lido, workflow escolhido, run em PLAN.  
-**Done:** AC OK, gates OK, sem deny, STATUS=DONE, specs/ADR atualizados se preciso.
+**Ready:** clear acceptance, Knowledge read, workflow chosen, business-rule changes confirmed, run in PLAN.
+**Done:** AC OK, unit tests + coverage ≥ 80%, S1–S12 and L1–L8 recorded, `harness.check` clean, no `deny` action, STATUS=DONE, specs/ADR/docs updated.

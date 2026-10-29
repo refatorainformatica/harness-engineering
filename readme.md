@@ -4,78 +4,131 @@
 
 # AI Engineering Harness
 
-Kit **open template** de engenharia com IA para qualquer empresa ou produto.
+A **template** for AI-assisted engineering that any repository can adopt, whatever the company, product, stack or cloud.
 
-Camada **operacional** no repositório: Knowledge, Specification, Agents, Workflows, Tools, Governance e Runtime. Funciona com Cursor, GitHub Copilot, Claude Code, Windsurf, Continue, Aider, JetBrains AI, Codex e qualquer ferramenta com instructions/rules.
+This repository **is not an application**. It is the **base** that other projects install. The target project gets only the operational layer `.ai-harness/` (plus optional adapters). The product code stays in your repository.
 
-## Modelo
+**Tool-agnostic:** the harness is plain Markdown plus portable scripts (bash, Python 3, git). Any AI agent, IDE or person can follow it. Optional adapters only point a specific tool at `.ai-harness/agents.md`.
+
+## What the target project gets
 
 ```text
 .ai-harness/
-├── Knowledge/       Architecture · Domain · Standards · ADR
-├── Specification/   Requirements · Use Cases · Acceptance (por feature)
-├── Agents/          Architect · Developer · Reviewer · Tester
-├── Workflows/       Feature · Bug · Refactoring · Migration
-├── Tools/           Build · Test · Git · Validation
-├── Governance/      Security · Quality · Architecture · Cost · Permissions
-└── Runtime/         Loop · Runs · Sandbox
+├── agents.md        Mandatory entrypoint for any agent
+├── Knowledge/       architecture · domain · standards · ADR · stacks/ (stack packs)
+├── Specification/   requirements · use cases · acceptance (per feature)
+├── Agents/          architect · developer · reviewer · tester · project context
+├── Workflows/       feature · bug · refactoring · migration · infra
+├── Tools/           build · test · git · validation · infra · bin/check-harness.py
+├── Governance/      security · quality · architecture · cost · permissions
+└── Runtime/         loop · runs · sandbox
 ```
 
-## Relação com SDLC corporativo
+## Stack packs
+
+The baseline rules apply to any stack. Stack packs add language/framework/platform details, and the agent reads only the active ones:
+
+| Languages & frameworks | DevOps & cloud |
+|------------------------|----------------|
+| .NET · Blazor · Java/Kotlin · Android · TypeScript · Node.js · Angular · React · React Native · Vue/Nuxt · Flutter · iOS/Swift · Python · Go · Rust · PHP (Laravel/Symfony) · Ruby (Rails) | DevOps (containers, Kubernetes, Terraform/OpenTofu, CI/CD, OpenTelemetry) · AWS · Azure · GCP · OCI |
+
+Cross-cutting packs: **database** (schema migrations) and **data** (dbt, Spark, notebooks, ML).
+
+`fill-harness.py` detects the stack and records the active packs in `Agents/project.md`. See [template/Knowledge/stacks/readme.md](template/Knowledge/stacks/readme.md).
+
+## Use this template in another repository
+
+```bash
+git clone <this-template-url> harness-engineering
+
+# existing project (creates .ai-harness/ + AGENTS.md)
+./harness-engineering/scripts/init-harness.sh /path/to/project MyApp
+
+# pick adapters for the tools your team uses (default: agents-md)
+./harness-engineering/scripts/init-harness.sh /path/to/project MyApp --adapters=agents-md,copilot,claude
+
+# install and infer Knowledge/Tools/specs from the README and code
+./harness-engineering/scripts/init-harness.sh /path/to/project MyApp --enrich
+```
+
+On GitHub you can mark this repository as a **Template repository** to fork the kit itself. To apply the harness to a product, use `init-harness.sh` — do not copy the whole kit into the app.
+
+## Update a project that already uses the harness
+
+```bash
+./harness-engineering/scripts/init-harness.sh /path/to/project --update
+```
+
+Refreshes the canonical rules (Agents, Workflows, Governance, Tools, Runtime, templates, kept stack packs) and migrates legacy file names. **Preserves** filled Knowledge, features and `Agents/project.md`. Installed version: `.ai-harness/.kit-version` (current: [VERSION](./VERSION), history: [changelog.md](./changelog.md)).
+
+## Check the rules automatically
+
+```bash
+python3 .ai-harness/Tools/bin/check-harness.py                         # harness structure
+python3 .ai-harness/Tools/bin/check-harness.py --diff origin/main      # rules on your changes
+python3 .ai-harness/Tools/bin/check-harness.py --coverage "**/coverage.cobertura.xml"   # >= 80% per artifact
+python3 .ai-harness/Tools/bin/check-harness.py --install-hook          # git pre-commit
+```
+
+It runs the same way in a terminal, a git hook or any CI. On the diff it flags removed attributes/annotations and IaC protections, cloud secrets and sensitive files, insecure code/IaC patterns, logging problems, code without unit tests, tests outside a feature folder and test naming.
+
+## Fill in later (optional)
+
+```bash
+python3 harness-engineering/scripts/fill-harness.py /path/to/project
+python3 harness-engineering/scripts/deep-fill-harness.py /path/to/project
+python3 harness-engineering/scripts/enrich-harness.py /path/to/project
+```
+
+## Relationship with the SDLC
 
 ```text
-Governança da empresa              Harness (execução no repo)
+Company governance                 Harness (execution in the repo)
 ─────────────────────────          ─────────────────────────
-Fases e quality gates              Workflows + Runtime gates
-Política de uso de IA              Governance/permissions.md
+Phases and quality gates           Workflows + Runtime gates
+AI usage policy                    Governance/permissions.md
 DoR / DoD                          Specification acceptance + DONE
-Playbook de squads                 AGENTS.md + Agents/*
+Squad playbook                     agents.md + Agents/*
 Charter / compliance               Knowledge + Governance
 ```
 
-Mapa: [docs/sdlc-mapping.md](docs/sdlc-mapping.md).
+Map: [docs/sdlc-mapping.md](docs/sdlc-mapping.md).
 
-## Estrutura deste repositório
+## Layout of this kit
 
 ```text
-harness-engineering/
-├── README.md
-├── banner.jpg
-├── docs/
-│   ├── adoption-guide.md
-│   ├── sdlc-mapping.md
-│   ├── ide-adapters.md
-│   └── rules-baseline.md
-├── template/                 → copia para <projeto>/.ai-harness/
-├── adapters/                 Cursor, Copilot, Claude, Windsurf, …
-└── scripts/init-harness.sh
+harness-engineering/          ← you are here (the kit)
+├── VERSION · changelog.md
+├── template/                 → copied to <project>/.ai-harness/
+├── adapters/                 optional tool pointers, generated from adapters/source/
+├── scripts/                  init-harness.sh · fill/deep-fill/enrich · build-adapters.py
+├── tests/run.sh              kit self-tests
+├── evals/                    rule-adherence scenarios for any agent
+└── docs/
 ```
 
-## Início rápido
+Guide: [docs/adoption-guide.md](docs/adoption-guide.md) · Adapters: [docs/ide-adapters.md](docs/ide-adapters.md) · Rules: [docs/rules-baseline.md](docs/rules-baseline.md) · Evals: [evals/readme.md](evals/readme.md).
+
+## Principles (for every project that adopts the kit)
+
+- Spec before code — no acceptance → `BLOCKED`.
+- **Code and tests always by feature**; new features mirror the existing structure.
+- **Rich domain always**; handlers and services orchestrate.
+- **Unit tests in every change; ≥ 80% line coverage on every testable artifact.**
+- **Security baseline (S1–S12) and rich logging (L1–L8) verified on every implementation.**
+- Business-rule changes need human confirmation.
+- **OSS first** — proprietary cloud services only with an ADR.
+- AI produces; humans approve whatever is `ask`.
+- Knowledge + Governance > model preference.
+- Agnostic of tool, IDE, stack and cloud.
+
+## Development of the kit
 
 ```bash
-./scripts/init-harness.sh /caminho/projeto MeuApp \
-  --adapters=cursor,copilot,claude,windsurf,continue,aider,agents-md,jetbrains
-
-# só o harness
-./scripts/init-harness.sh /caminho/projeto MeuApp --adapters=none
+python3 scripts/build-adapters.py   # regenerate adapters after editing adapters/source/harness.md
+bash tests/run.sh                   # must end with 0 failed
 ```
 
-Depois: preencher `Knowledge/`, ajustar `Tools/` + `Governance/`, criar features em `Specification/features/`.
+## License
 
-Guia: [docs/adoption-guide.md](docs/adoption-guide.md) · Adapters: [docs/ide-adapters.md](docs/ide-adapters.md) · Regras: [docs/rules-baseline.md](docs/rules-baseline.md).
-
-## Princípios
-
-- Spec antes de código — sem aceite → `BLOCKED`.
-- **Código e testes sempre por feature** (`template/Knowledge/Standards.md`).
-- **OSS primeiro** — cloud proprietário só com ADR (`template/Governance/cost.md`).
-- Aceite = testes (**AC-T\***) ou lacuna justificada (**AC-G\*** + stub).
-- Workflow orquestra; Agent executa o papel.
-- IA produz; humano aprova o que for `ask`.
-- Knowledge + Governance > preferência do modelo.
-- Agnóstico de cloud, stack e IDE.
-
-## Licença
-
-[LICENSE](LICENSE) (MIT).
+[LICENSE](LICENSE) (MIT). Use, copy and adapt in any repository.

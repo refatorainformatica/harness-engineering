@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Aprofunda .ai-harness/ com specs completas a partir de README, código e testes."""
+"""Deepen .ai-harness/ with complete specs derived from the README, code and tests."""
 
 from __future__ import annotations
 
@@ -106,7 +106,7 @@ def feature_match_score(fid: str, code: str, test: UnitTest, repo: Path) -> int:
         score += 100
     if f"/{fid_l}/" in rel_s:
         score += 80
-    # tests/FatoOuFake.Domain.Tests → projeto Domain
+    # tests/MyApp.Domain.Tests → Domain project
     m = re.search(r"tests/([a-z0-9.]+)\.tests/", rel_s, re.I)
     if m:
         proj = re.sub(r"[^a-z0-9]", "", m.group(1).lower())
@@ -121,7 +121,7 @@ def feature_match_score(fid: str, code: str, test: UnitTest, repo: Path) -> int:
             continue
         if t in rel_s or t in test.file_name.lower():
             score += 15
-    # dotnet: projeto Tests espelha csproj
+    # dotnet: the Tests project mirrors the csproj
     proj = fid_l.replace("-", "")
     if proj and proj in rel_s.replace("-", "").replace("_", ""):
         score += 40
@@ -149,7 +149,7 @@ def map_tests_to_features(
             mapping[best_fid].append(test)
             assigned.add(key)
 
-    # testes órfãos → feature core (se existir) ou primeira feature
+    # orphan tests → core feature (if any) or the first feature
     orphan_fid = next((f[0] for f in features if f[0] == "core"), features[0][0] if features else "core")
     for test in all_tests:
         key = (test.rel_path, test.name)
@@ -168,7 +168,7 @@ def test_run_command(repo: Path, stack: dict[str, bool], fid: str, tests: list[U
             return f"dotnet test {sln}"
         if stack["flutter"]:
             return "flutter test"
-        return "ver README — sem testes mapeados"
+        return "see README — no mapped tests"
 
     rel_paths: set[str] = set()
     for t in tests:
@@ -255,60 +255,101 @@ def build_acceptance_md(
 
         gaps = ""
         if local_rules:
-            gaps = "\n## Lacunas (sem teste automatizado explícito)\n\n"
-            gaps += "\n".join(f"- Regra/documentada: {r[:100]}" for r in local_rules[:3])
-            gaps += "\n\n> Adicionar testes em `test/` ou `tests/` e rerodar `deep-fill-harness.py`.\n"
+            gaps = "\n## Gaps (AC-G*)\n\n"
+            gaps += "\n".join(f"- Documented rule without an explicit automated test: {r[:100]}" for r in local_rules[:3])
+            gaps += "\n\n> Add tests in `test/` or `tests/` and re-run `deep-fill-harness.py`.\n"
 
         return f"""# Acceptance Criteria — {fid}
 
-> Gerado a partir dos **testes unitários** do repositório em {date.today().isoformat()}.
+> Generated from the repository **unit tests** on {date.today().isoformat()}.
 
-## Comando de validação (escopo)
+## Validation command (scope)
 
 ```bash
 {cmd}
 ```
 
-## Critérios (= testes existentes)
+## Criteria (= existing tests)
 
 {chr(10).join(checklist)}
 
-## Evidências
+## Evidence
 
-| AC | Teste | Arquivo | Comando | Resultado |
-|----|-------|---------|---------|-----------|
+| AC | Test | File | Command | Result |
+|----|------|------|---------|--------|
 {chr(10).join(evidence)}
 
-## Critérios de processo
+## Process criteria
 
-- [ ] AC-P01 — Use cases em `use-cases.md` coerentes com os testes acima
-- [ ] AC-P02 — Sem violação de Knowledge / Governance
-- [ ] AC-P03 — Novos comportamentos exigem novo teste antes de marcar DONE
+- [ ] AC-P01 — Use cases in `use-cases.md` consistent with the tests above
+- [ ] AC-P02 — No violation of Knowledge / Governance
+- [ ] AC-P03 — New behavior requires a new test before marking DONE
 {gaps}"""
 
-    # sem testes mapeados
+    # no mapped tests
     return f"""# Acceptance Criteria — {fid}
 
-> Nenhum teste unitário mapeado para `{code}` em {date.today().isoformat()}.
+> No unit test mapped to `{code}` on {date.today().isoformat()}.
 
-## Lacuna de cobertura
+## Gaps (AC-G*)
 
-- [ ] AC-G01 — Criar testes em `test/` ou `tests/` espelhando esta feature
-- [ ] AC-G02 — Use cases cobertos por testes automatizados
-- [ ] AC-G03 — `{cmd}` verde após implementação
+- [ ] AC-G01 — Create tests in `test/` or `tests/` mirroring this feature
+- [ ] AC-G02 — Use cases covered by automated tests
+- [ ] AC-G03 — `{cmd}` green after implementation
 
-## Evidências
+## Evidence
 
-| AC | Como validar | Resultado |
-|----|--------------|-----------|
-| AC-G01 | PR adiciona `{code}` tests | pending |
-| AC-G02 | Reviewer confere mapa teste ↔ UC | pending |
-| AC-G03 | CI / comando local | pending |
+| AC | How to validate | Result |
+|----|-----------------|--------|
+| AC-G01 | PR adds `{code}` tests | pending |
+| AC-G02 | Reviewer checks the test ↔ UC map | pending |
+| AC-G03 | CI / local command | pending |
 
-## Regras a cobrir (README)
+## Rules to cover (README)
 
-{chr(10).join('- ' + r for r in local_rules[:5]) if local_rules else '- Ver requirements.md'}
+{chr(10).join('- ' + r for r in local_rules[:5]) if local_rules else '- See requirements.md'}
 """
+
+
+# README section names (lower-case) read from the target project, in Portuguese and English:
+# target projects may be documented in either language.
+BUSINESS_RULES_SECTIONS = ("regras de negócio", "regras de negocio", "business rules", "rules")
+LIMITATIONS_SECTIONS = (
+    "limitações atuais",
+    "limitacoes atuais",
+    "limitações",
+    "limitacoes",
+    "current limitations",
+    "known limitations",
+    "limitations",
+)
+ARCHITECTURE_SECTIONS = ("arquitetura", "architecture")
+STACK_SECTIONS = ("stack", "tech stack", "tecnologias", "technologies")
+FEATURE_HEADER_KEYWORDS = ("feature", "módulo", "modulo", "module")
+DESCRIPTION_HEADER_KEYWORDS = ("respons", "descri", "propósito", "proposito", "purpose", "papel", "role")
+
+# Sections appended to Governance/security.md (current titles + legacy Portuguese titles).
+PRODUCT_SECURITY_SECTIONS = (
+    "Rules derived from the product",
+    "Limitations / risks",
+    "Regras derivadas do produto",
+    "Limitações / riscos",
+)
+
+
+def first_section(sections: dict[str, str], names: tuple[str, ...]) -> str:
+    """Return the first non-empty README section among `names` (lower-case titles)."""
+    for name in names:
+        if sections.get(name):
+            return sections[name]
+    return ""
+
+
+def strip_sections(text: str, titles: tuple[str, ...]) -> str:
+    """Remove `## <title>` sections (up to the next `## ` heading) for each title."""
+    for title in titles:
+        text = re.sub(rf"\n*^## {re.escape(title)}[ \t]*\n.*?(?=^## |\Z)", "\n\n", text, flags=re.MULTILINE | re.DOTALL)
+    return text.rstrip()
 
 
 def parse_sections(text: str) -> dict[str, str]:
@@ -339,7 +380,10 @@ def parse_bullets(block: str) -> list[str]:
 
 
 def parse_feature_tables(text: str) -> dict[str, str]:
-    """Extrai tabelas markdown | feature | descrição | (somente IDs plausíveis)."""
+    """Extract markdown tables | feature | description | (plausible IDs only).
+
+    README keywords are matched in Portuguese and English: target projects may use either language.
+    """
     features: dict[str, str] = {}
     valid_id = re.compile(r"^[a-z][a-z0-9_-]{0,40}$")
 
@@ -350,10 +394,10 @@ def parse_feature_tables(text: str) -> dict[str, str]:
         header = [c.strip().lower() for c in lines[0].split("|")[1:-1]]
         if not header:
             continue
-        if not any("feature" in h or "módulo" in h or "modulo" in h for h in header):
+        if not any(any(k in h for k in FEATURE_HEADER_KEYWORDS) for h in header):
             continue
-        name_idx = next((i for i, h in enumerate(header) if "feature" in h or "módulo" in h or "modulo" in h), 0)
-        desc_idx = next((i for i, h in enumerate(header) if any(x in h for x in ("respons", "descri", "propósito", "proposito", "papel"))), min(1, len(header) - 1))
+        name_idx = next((i for i, h in enumerate(header) if any(k in h for k in FEATURE_HEADER_KEYWORDS)), 0)
+        desc_idx = next((i for i, h in enumerate(header) if any(x in h for x in DESCRIPTION_HEADER_KEYWORDS)), min(1, len(header) - 1))
         for row in lines[2:]:
             cols = [c.strip() for c in row.split("|")[1:-1]]
             if len(cols) <= max(name_idx, desc_idx):
@@ -371,22 +415,23 @@ def parse_feature_tables(text: str) -> dict[str, str]:
 def rules_for_feature(feature_id: str, rules: list[str]) -> list[str]:
     if not rules:
         return []
+    # Keywords matched against README rules (Portuguese and English).
     keys = {
-        "auth": ("auth", "login", "sessão", "sessao", "registro", "google", "gov.br"),
-        "account": ("conta", "pdf", "encerr", "wipe", "privacidade"),
-        "child": ("criança", "crianca", "marco", "perfil", "ativa"),
-        "registry": ("evento", "formul", "registr"),
-        "home": ("home", "resumo", "humor"),
-        "timeline": ("timeline", "histórico", "historico", "cronol"),
-        "care": ("cuidado", "emergência", "emergencia", "conquista"),
-        "sharing": ("compartilh", "convite", "profissional", "vínculo", "vinculo"),
-        "notifications": ("alerta", "notifica", "agenda do dia", "humor"),
+        "auth": ("auth", "login", "sessão", "sessao", "session", "registro", "sign up", "sign-up", "signup", "google", "gov.br"),
+        "account": ("conta", "account", "pdf", "encerr", "clos", "wipe", "privacidade", "privacy"),
+        "child": ("criança", "crianca", "child", "marco", "milestone", "perfil", "profile", "ativa", "active"),
+        "registry": ("evento", "event", "formul", "form", "registr"),
+        "home": ("home", "resumo", "summary", "humor", "mood"),
+        "timeline": ("timeline", "histórico", "historico", "history", "cronol", "chronolog"),
+        "care": ("cuidado", "care", "emergência", "emergencia", "emergency", "conquista", "achievement"),
+        "sharing": ("compartilh", "shar", "convite", "invit", "profissional", "professional", "vínculo", "vinculo", "link"),
+        "notifications": ("alerta", "alert", "notifica", "notif", "agenda do dia", "daily agenda", "humor", "mood"),
         "evolution": ("evolu", "insight"),
-        "reports": ("relat", "export"),
-        "schedule": ("agenda", "medica"),
-        "ai": ("assistente", "insight", "orientação médica"),
-        "community": ("comunidade", "estático", "estatico"),
-        "onboarding": ("onboarding", "inicial"),
+        "reports": ("relat", "report", "export"),
+        "schedule": ("agenda", "schedul", "medica"),
+        "ai": ("assistente", "assistant", "insight", "orientação médica", "medical guidance"),
+        "community": ("comunidade", "community", "estático", "estatico", "static"),
+        "onboarding": ("onboarding", "inicial", "initial"),
         "splash": ("splash", "bootstrap"),
     }
     kws = keys.get(feature_id, (feature_id.replace("-", " "),))
@@ -405,7 +450,7 @@ def discover_features_deep(repo: Path, stack: dict[str, bool], table: dict[str, 
         if "/bin" in code.replace("\\", "/") or "/obj" in code.replace("\\", "/"):
             return
         seen.add(fid)
-        items.append((fid, code, table.get(fid, desc) or desc or f"Módulo `{code}`"))
+        items.append((fid, code, table.get(fid, desc) or desc or f"Module `{code}`"))
 
     if stack["flutter"]:
         feat = repo / "lib" / "features"
@@ -413,7 +458,7 @@ def discover_features_deep(repo: Path, stack: dict[str, bool], table: dict[str, 
             for d in sorted(feat.iterdir()):
                 if d.is_dir():
                     add(d.name, f"lib/features/{d.name}", table.get(d.name, ""))
-        # flutter: não enumerar csproj/android como features
+        # flutter: do not enumerate csproj/android as features
 
     elif stack["dotnet"]:
         modules = sorted(repo.rglob("*Module.cs"))
@@ -425,7 +470,7 @@ def discover_features_deep(repo: Path, stack: dict[str, bool], table: dict[str, 
                 fid = "-".join(p.lower() for p in rel.parts[-2:]) if len(rel.parts) >= 2 else m.parent.name.lower()
                 add(fid, str(rel), f"API module {m.stem}")
         else:
-            # biblioteca/app: um feature por projeto de teste espelhando src, ou núcleo único
+            # library/app: one feature per project mirroring src, or a single core
             test_projs = [p for p in repo.rglob("*Tests*.csproj") if not any(x in p.parts for x in fill.SKIP_DIRS)]
             src_projs = [
                 p
@@ -438,15 +483,15 @@ def discover_features_deep(repo: Path, stack: dict[str, bool], table: dict[str, 
                 for csproj in sorted(src_projs)[:8]:
                     rel = csproj.parent.relative_to(repo)
                     fid = csproj.stem.replace(".", "-").lower()
-                    add(fid, str(rel), table.get(fid, f"Projeto {csproj.stem}"))
+                    add(fid, str(rel), table.get(fid, f"Project {csproj.stem}"))
             else:
-                add(repo.name.lower().replace(".", "-"), ".", table.get(repo.name.lower(), f"Solução {repo.name}"))
+                add(repo.name.lower().replace(".", "-"), ".", table.get(repo.name.lower(), f"Solution {repo.name}"))
 
     apis = repo / "Apis"
     if apis.is_dir() and not any(x[1].startswith("Apis/Services/Features") for x in items):
         for d in sorted(apis.iterdir()):
             if d.is_dir() and d.name not in fill.SKIP_DIRS:
-                add(d.name.lower(), f"Apis/{d.name}", f"Camada {d.name}")
+                add(d.name.lower(), f"Apis/{d.name}", f"Layer {d.name}")
 
     if stack["docs_only"]:
         for doc in sorted((repo / "docs").rglob("*.md")):
@@ -472,7 +517,7 @@ def discover_features_deep(repo: Path, stack: dict[str, bool], table: dict[str, 
             add(fid, code, desc)
 
     if not items:
-        add("core", ".", "Núcleo do repositório")
+        add("core", ".", "Repository core")
 
     return items
 
@@ -494,71 +539,61 @@ def write_feature_specs(
     local_rules = rules_for_feature(fid, business_rules)
     global_rules = business_rules[:8]
 
-    rf = []
-    if description:
-        rf.append(f"RF-01 — {description}")
-    for i, r in enumerate(local_rules[:6], start=2):
-        rf.append(f"RF-{i:02d} — {r}")
-
-    rf_text = "\n".join(f"{x}." if not x[0].isdigit() else f"{i}. {x.split(' — ', 1)[-1]}" for i, x in enumerate(rf, 1))
-    # fix numbering
-    rf_lines = []
-    for i, r in enumerate(rf, 1):
-        body = r.split(" — ", 1)[-1] if " — " in r else r
-        rf_lines.append(f"{i}. {body}")
-    rf_text = "\n".join(rf_lines)
+    # Functional requirements: FR-xx, numbered sequentially (matches Specification/templates/requirements.md).
+    fr_bodies = ([description] if description else []) + local_rules[:6]
+    rf_text = "\n".join(f"{i}. FR-{i:02d} — {body}" for i, body in enumerate(fr_bodies, 1))
 
     write(
         dest / "requirements.md",
         f"""# Requirements — {fid}
 
-| Campo | Valor |
+| Field | Value |
 |-------|-------|
 | Feature | {fid} |
 | Status | stable |
-| Código | `{code}` |
+| Code | `{code}` |
 | Owners | engineering |
-| Atualizado | {date.today().isoformat()} |
+| Updated | {date.today().isoformat()} |
 
-## Intenção
+## Intent
 
-{description or f"Comportamento do módulo {fid} conforme README e código."}
+{description or f"Behavior of module {fid} as described in the README and code."}
 
-## Requisitos funcionais
+## Functional requirements
 
 {rf_text}
 
-## Requisitos não-funcionais
+## Non-functional requirements
 
 - Baseline: `Governance/quality.md`, `Governance/security.md`
-- Respeitar `Knowledge/Architecture.md` e `Knowledge/Standards.md`
-- Alterações exigem evidência em `acceptance.md`
+- Follow `Knowledge/architecture.md` and `Knowledge/standards.md`
+- Changes require evidence in `acceptance.md`
 
-## Regras globais do produto (aplicáveis)
+## Global product rules (applicable)
 
-{chr(10).join('- ' + r for r in global_rules) if global_rules else '- Ver README.md'}
+{chr(10).join('- ' + r for r in global_rules) if global_rules else '- See README.md'}
 
-## Fora de escopo
+## Out of scope
 
-{chr(10).join('- ' + l for l in limitations[:5]) if limitations else '- Itens marcados no README como roadmap/limitações'}
+{chr(10).join('- ' + l for l in limitations[:5]) if limitations else '- Items marked in the README as roadmap/limitations'}
 
-## Dependências
+## Dependencies
 
 - Knowledge: Architecture, Domain, Standards
-- Código: `{code}`
+- Code: `{code}`
 """,
     )
 
-    uc_rules = local_rules[:3] or [description or f"Usuário interage com {fid}"]
+    uc_rules = local_rules[:3] or [description or f"User interacts with {fid}"]
     ucs = []
     for i, r in enumerate(uc_rules, 1):
         ucs.append(
-            f"""## UC-{i:02d} — Fluxo principal
+            f"""## UC-{i:02d} — Main flow
 
-- **Actor:** usuário / sistema
-- **Given** contexto válido e regra: {r[:120]}
-- **When** a ação principal de `{fid}` é executada
-- **Then** o comportamento descrito no README/código é respeitado sem violar Governance
+- **Actor:** user / system
+- **Given** a valid context and rule: {r[:120]}
+- **When** the main action of `{fid}` is executed
+- **Then** the behavior described in the README/code holds without violating Governance
 """
         )
     write(dest / "use-cases.md", f"# Use Cases — {fid}\n\n" + "\n".join(ucs))
@@ -580,10 +615,8 @@ def deep_fill_repo(repo: Path) -> int:
     sections = parse_sections(readme)
     table = parse_feature_tables(readme)
     stack = fill.detect_stack(repo)
-    business_rules = parse_bullets(sections.get("regras de negócio", ""))
-    limitations = parse_bullets(sections.get("limitações atuais", "")) or parse_bullets(
-        sections.get("limitações", "")
-    )
+    business_rules = parse_bullets(first_section(sections, BUSINESS_RULES_SECTIONS))
+    limitations = parse_bullets(first_section(sections, LIMITATIONS_SECTIONS))
 
     features = discover_features_deep(repo, stack, table)
     all_tests = discover_unit_tests(repo)
@@ -603,12 +636,12 @@ def deep_fill_repo(repo: Path) -> int:
         count += 1
 
     write(
-        harness / "Specification/features/INDEX.md",
-        f"""# Features — índice
+        harness / "Specification/features/index.md",
+        f"""# Features — index
 
-> Aprofundado em {date.today().isoformat()} ({count} features, {len(all_tests)} testes unitários indexados).
+> Deepened on {date.today().isoformat()} ({count} features, {len(all_tests)} unit tests indexed).
 
-| ID | Spec | Código | Status | Testes | Resumo |
+| ID | Spec | Code | Status | Tests | Summary |
 |----|------|--------|--------|--------|--------|
 """
         + "\n".join(
@@ -617,47 +650,50 @@ def deep_fill_repo(repo: Path) -> int:
         )
         + """
 
-Cada feature possui `requirements.md`, `use-cases.md`, `acceptance.md` (**AC = testes unitários**).
+Each feature has `requirements.md`, `use-cases.md`, `acceptance.md` (**AC = unit tests**).
 """,
     )
 
     # Knowledge enrichment
-    arch_extra = sections.get("arquitetura", "") or sections.get("architecture", "")
-    stack_extra = sections.get("stack", "")
+    arch_extra = first_section(sections, ARCHITECTURE_SECTIONS)
+    stack_extra = first_section(sections, STACK_SECTIONS)
     if arch_extra or stack_extra:
-        arch_path = harness / "Knowledge/Architecture.md"
+        arch_path = harness / "Knowledge/architecture.md"
         base = arch_path.read_text(encoding="utf-8") if arch_path.exists() else ""
         write(
             arch_path,
             base
-            + "\n\n## Detalhes do README\n\n"
+            + "\n\n## README details\n\n"
             + (("### Stack\n\n" + stack_extra + "\n\n") if stack_extra else "")
-            + (("### Arquitetura\n\n" + arch_extra[:4000] + "\n") if arch_extra else ""),
+            + (("### Architecture\n\n" + arch_extra[:4000] + "\n") if arch_extra else ""),
         )
 
     if business_rules or limitations:
-        dom_path = harness / "Knowledge/Domain.md"
+        dom_path = harness / "Knowledge/domain.md"
         base = dom_path.read_text(encoding="utf-8") if dom_path.exists() else ""
-        gloss = "\n".join(f"| RN-{i:02d} | {r[:100]} |" for i, r in enumerate(business_rules, 1))
+        gloss = "\n".join(f"| BR-{i:02d} | {r[:100]} |" for i, r in enumerate(business_rules, 1))
         lim = "\n".join(f"- {l}" for l in limitations[:10])
         write(
             dom_path,
             base
-            + "\n\n## Regras de negócio (README)\n\n| ID | Regra |\n|----|-------|\n"
+            + "\n\n## Business rules (README)\n\n| ID | Rule |\n|----|------|\n"
             + (gloss or "| — | — |")
-            + "\n\n## Limitações conhecidas\n\n"
-            + (lim or "- Ver README"),
+            + "\n\n## Known limitations\n\n"
+            + (lim or "- See README"),
         )
 
     if business_rules or limitations:
         sec = harness / "Governance/security.md"
         base = sec.read_text(encoding="utf-8") if sec.exists() else ""
+        # security.md is not regenerated by fill: drop sections from a previous run (English or legacy
+        # Portuguese titles) so re-running does not duplicate them.
+        base = strip_sections(base, PRODUCT_SECURITY_SECTIONS)
         write(
             sec,
             base
-            + "\n\n## Regras derivadas do produto\n\n"
+            + "\n\n## Rules derived from the product\n\n"
             + "\n".join(f"- {r}" for r in business_rules[:12])
-            + ("\n\n## Limitações / riscos\n\n" + "\n".join(f"- {l}" for l in limitations[:8]) if limitations else ""),
+            + ("\n\n## Limitations / risks\n\n" + "\n".join(f"- {l}" for l in limitations[:8]) if limitations else ""),
         )
 
     return count
@@ -673,7 +709,8 @@ def main() -> int:
     total_features = 0
     ok = 0
     for repo in repos:
-        if repo.name == "harness-engineering" and (repo / "template").is_dir():
+        if fill.is_harness_kit(repo):
+            print(f"[SKIP] {repo.name} — kit-template")
             continue
         n = deep_fill_repo(repo)
         if n:
@@ -683,7 +720,7 @@ def main() -> int:
         else:
             print(f"[SKIP] {repo.name}")
 
-    print(f"\nRepos: {ok} | Features totais: {total_features}")
+    print(f"\nRepos: {ok} | Total features: {total_features}")
     return 0
 
 

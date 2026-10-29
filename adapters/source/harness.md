@@ -1,0 +1,10 @@
+This repository uses the **AI Engineering Harness**. Mandatory entrypoint: `.ai-harness/agents.md` — read it before changing code or specs.
+
+1. **Run** — create/continue one under `.ai-harness/Runtime/state/runs/` (`Runtime/run.md` + `Runtime/loop.md`).
+2. **Workflow** — `feature` | `bug` | `refactoring` | `migration` | `infra` (`.ai-harness/Workflows/`).
+3. **Context** — Knowledge + `Specification/features/<id>/` + **only** the active stack packs (`.ai-harness/Agents/project.md`).
+4. **Role** — architect | developer | reviewer | tester (`.ai-harness/Agents/`).
+5. **Tools** — only those in `.ai-harness/Tools/`, at the level set by `Governance/permissions.md` (`auto` | `ask` | `deny`).
+6. **DONE** — `python3 .ai-harness/Tools/bin/check-harness.py` with no errors, security baseline S1–S12 and logging verification L1–L8 recorded, every rule validated, specs/ADR updated.
+
+Rules (single source: `.ai-harness/Knowledge/standards.md` and `.ai-harness/Governance/`): code and tests by feature; preserve attributes/annotations and behavior; rich structured logs; code docs in English + `docs/`; OSS first (`Governance/cost.md`); acceptance = AC-T\* or AC-G\* + stub. Commit, push and secrets only as the permission matrix allows. On conflict, the harness wins over this file.

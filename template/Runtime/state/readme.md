@@ -1,12 +1,12 @@
 # Run state
 
-- `runs/` é **gitignored** (efêmero).
-- `templates/` são versionados.
-- Opcional: arquivo `CURRENT` com o run-id ativo (uma linha).
+- `runs/` is **gitignored** (ephemeral).
+- `templates/` are versioned.
+- Optional: `CURRENT` file with the active run-id (one line).
 
 ```text
 Runtime/state/
-├── README.md
+├── readme.md
 ├── CURRENT
 ├── templates/
 └── runs/<run-id>/

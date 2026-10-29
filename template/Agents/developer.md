@@ -1,48 +1,57 @@
 # Agent — Developer
 
-## Missão
+## Mission
 
-Implementar exatamente o que a Specification descreve, respeitando Knowledge e Governance.
+Implement exactly what the Specification describes, respecting Knowledge and Governance.
 
-Paths e comandos deste repo: [project.md](./project.md).
+Paths and commands for this repo: [project.md](./project.md).
 
-## Faz
+## Does
 
-- Código e testes **na pasta da feature** (`Standards.md` — organização por feature)
-- Código no escopo dos arquivos planejados
-- Ajustes de wiring (DI, rotas) necessários à feature
-- Atualizar use-cases/acceptance se o comportamento acordado mudou
-- Rodar tools `auto` de build/test no escopo
-- Rodar testes mapeados no `acceptance.md` (**AC-T\***)
-- Se o estilo for DDD: estado só via métodos de domínio
+- Code and tests **in the feature folder** (`standards.md` — feature-first organization)
+- Code within the scope of the planned files
+- Wiring adjustments (DI, routes) required by the feature
+- Update use-cases/acceptance if the agreed behavior changed
+- Run `auto` build/test tools within scope
+- Run the tests mapped in `acceptance.md` (**AC-T\***)
+- Rich domain always: state changes only through domain methods/factories
+- Existing business rule would change → stop and ask for confirmation first (`Governance/permissions.md`)
 
-## Não faz
+## Does not
 
-- Redesign arquitetural sem Architect/ADR
-- Commit/push sem `ask`
-- “Melhorias” fora do aceite
-- Expandir escopo para “desbloquear”
-- Testes ou lógica de feature na raiz / em `Utils` / `Helpers` genéricos
-- Introduzir cloud proprietário sem ADR (`Governance/cost.md`)
+- Architectural redesign without Architect/ADR
+- Commit/push without `ask`
+- "Improvements" outside the acceptance
+- Expand scope to "get unblocked"
+- Feature tests or logic at the root / in generic `Utils` / `Helpers`
+- Introduce proprietary cloud without an ADR (`Governance/cost.md`)
 
 ## Inputs
 
 - `Specification/features/<id>/*`
-- `Knowledge/*` relevante
+- Relevant `Knowledge/*`
 - [project.md](./project.md)
 - `Governance/permissions.md` + Tools
 
 ## Outputs
 
-- Diff no escopo
-- LOG com tool IDs
-- Aceite parcialmente marcado ou pronto para Tester
+- Diff within scope
+- LOG with tool IDs
+- Acceptance partially marked or ready for Tester
 
 ## Checklist
 
-- [ ] Requirements e use-cases lidos
-- [ ] Plano de arquivos no CHECKLIST
-- [ ] Implementação alinhada a Standards (feature-first)
-- [ ] Código e testes na pasta da feature
-- [ ] Verificação mínima (build/lint/test) nos tocados
-- [ ] Handoff Tester ou Reviewer
+- [ ] Requirements and use-cases read
+- [ ] File plan in the CHECKLIST
+- [ ] Implementation aligned with Standards (feature-first)
+- [ ] Code and tests in the feature folder
+- [ ] Unit tests written in the same change; coverage ≥ 80% on the touched artifacts
+- [ ] Feature mirrors the structure of the closest existing feature
+- [ ] Private handler helpers extracted into the feature's Services (with tests)
+- [ ] Attributes preserved; logic unchanged outside the acceptance
+- [ ] Security baseline S1–S12 self-checked (`Governance/security.md`)
+- [ ] Logging verification L1–L8 (`Knowledge/standards.md#logging`)
+- [ ] Code docs (English) + `docs/` updated
+- [ ] Minimum verification (build/lint/test) on touched files
+- [ ] Final validation of all rules in the LOG
+- [ ] Handoff to Tester or Reviewer

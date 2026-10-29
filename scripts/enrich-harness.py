@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-2º script de enriquecimento do .ai-harness/
+Second enrichment script for .ai-harness/
 
-Completa o que fill/deep-fill deixaram raso:
-- ADR a partir de decisões reais (stack, estilo, integrações)
-- Glossário de domínio a partir do código (entities, enums, features)
-- Use cases derivados de testes + tipos públicos do código
-- Governance security/cost específicos do projeto detectado
-- Agents/Workflows customizados com paths e comandos do repo
-- Stubs de teste para features com lacuna de coverage (AC-G*)
+Completes what fill/deep-fill left shallow:
+- ADR from real decisions (stack, style, integrations)
+- Domain glossary from the code (entities, enums, features)
+- Use cases derived from tests + public types in the code
+- Project-specific Governance security/cost for the detected project
+- Custom Agents/Workflows: only `Agents/project.md` (roles come from the template)
+- Test stubs for features with a coverage gap (AC-G*)
 
-Uso:
-  python3 enrich-harness.py [/caminho/repo ...]
-  (sem args: todos os .ai-harness sob Refatora)
+Usage:
+  python3 enrich-harness.py [/path/to/repo ...]
+  (no args: every .ai-harness under the current directory)
 """
 
 from __future__ import annotations
@@ -50,11 +50,11 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace") if path.exists() else ""
 
 
-# ── Código → glossário / tipos ──────────────────────────────────────────────
+# ── Code → glossary / types ─────────────────────────────────────────────────
 
 
 def extract_csharp_domain(repo: Path) -> list[tuple[str, str, str]]:
-    """(termo, kind, path)"""
+    """(term, kind, path)"""
     out: list[tuple[str, str, str]] = []
     patterns = [
         (r"\b(?:public\s+)?(?:sealed\s+)?(?:partial\s+)?class\s+(\w+)", "class"),
@@ -67,7 +67,7 @@ def extract_csharp_domain(repo: Path) -> list[tuple[str, str, str]]:
             continue
         if "Tests" in path.parts or path.name.endswith("Tests.cs"):
             continue
-        # prioriza Domain / Entities / ValueObjects / Features
+        # prioritize Domain / Entities / ValueObjects / Features
         rel = str(path.relative_to(repo))
         weight = any(x in rel for x in ("Domain", "Entities", "ValueObjects", "Features", "Aggregates"))
         if not weight and "src/" not in rel and "Apis/" not in rel and "lib/" not in rel:
@@ -123,10 +123,10 @@ def extract_docs_terms(repo: Path) -> list[tuple[str, str, str]]:
 
 def build_glossary(repo: Path, stack: dict, features: list[tuple[str, str, str]]) -> str:
     rows: list[tuple[str, str, str]] = [
-        ("Harness", "Estrutura `.ai-harness/` deste repositório", "—"),
-        ("Feature", "Unidade em `Specification/features/<id>/`", "—"),
-        ("Run", "Execução do agente em `Runtime/state/runs/`", "—"),
-        ("Acceptance", "Critérios derivados de testes unitários (AC-T*)", "—"),
+        ("Harness", "`.ai-harness/` structure of this repository", "—"),
+        ("Feature", "Unit in `Specification/features/<id>/`", "—"),
+        ("Run", "Agent execution in `Runtime/state/runs/`", "—"),
+        ("Acceptance", "Criteria derived from unit tests (AC-T*)", "—"),
     ]
     seen = {r[0].lower() for r in rows}
 
@@ -134,7 +134,7 @@ def build_glossary(repo: Path, stack: dict, features: list[tuple[str, str, str]]
         if fid.lower() in seen:
             continue
         seen.add(fid.lower())
-        rows.append((fid, desc[:120] or f"Módulo `{code}`", code))
+        rows.append((fid, desc[:120] or f"Module `{code}`", code))
 
     types = []
     if stack.get("dotnet"):
@@ -148,43 +148,43 @@ def build_glossary(repo: Path, stack: dict, features: list[tuple[str, str, str]]
         if name.lower() in seen:
             continue
         seen.add(name.lower())
-        rows.append((name, f"{kind} em `{path}`", path))
+        rows.append((name, f"{kind} in `{path}`", path))
         if len(rows) >= 60:
             break
 
     table = "\n".join(f"| {t} | {m} | `{p}` |" for t, m, p in rows)
     return f"""# Domain — {repo.name}
 
-> Glossário enriquecido em {date.today().isoformat()} a partir de features + código.
+> Glossary enriched on {date.today().isoformat()} from features + code.
 
-## Glossário
+## Glossary (ubiquitous language)
 
-| Termo | Significado | Origem |
-|-------|-------------|--------|
+| Term | Meaning | Source |
+|------|---------|--------|
 {table}
 
-## Como manter
+## How to maintain
 
-1. Novo conceito de domínio → linha neste glossário **na mesma PR**.
-2. Mesmo identificador em SPEC, código e testes.
-3. ADR se o termo implica trade-off arquitetural.
+1. New domain concept → a row in this glossary **in the same PR**.
+2. Same identifier in the SPEC, code and tests.
+3. ADR if the term implies an architectural trade-off.
 """
 
 
-# ── Use cases a partir de testes / código ───────────────────────────────────
+# ── Use cases from tests / code ────────────────────────────────────────────
 
 
 def humanize_test_name(name: str) -> tuple[str, str, str]:
-    """Converte nome de teste em Given/When/Then aproximado."""
+    """Convert a test name into an approximate Given/When/Then."""
     raw = name
-    # snake/camel → espaços
+    # snake/camel → spaces
     s = re.sub(r"([a-z])([A-Z])", r"\1 \2", name)
     s = s.replace("_", " ").strip()
     s = re.sub(r"\s+", " ", s)
 
-    given = "o sistema está no estado inicial do teste"
-    when = f"executa o cenário `{raw}`"
-    then = f"o comportamento `{s}` é satisfeito"
+    given = "the system is in the initial state of the test"
+    when = f"the scenario `{raw}` runs"
+    then = f"the behavior `{s}` holds"
 
     low = s.lower()
     if "should" in low:
@@ -193,7 +193,8 @@ def humanize_test_name(name: str) -> tuple[str, str, str]:
         then = ("should " + parts[1].strip()) if len(parts) > 1 else then
     if "emits" in low:
         then = s
-        when = "o evento/ação do cenário é disparado"
+        when = "the scenario event/action is triggered"
+    # Test-name keywords: English and Portuguese (test names in target projects may use either).
     if "deve" in low or "fail" in low or "throw" in low or "falhar" in low:
         then = s
     if "given" in low or "quando" in low:
@@ -219,8 +220,8 @@ def rewrite_use_cases(
             ucs.append(
                 f"""## UC-{i:02d} — {t.name[:80]}
 
-- **Actor:** sistema sob teste
-- **Fonte:** `{rel}` ({t.kind})
+- **Actor:** system under test
+- **Source:** `{rel}` ({t.kind})
 - **Given** {g}
 - **When** {w}
 - **Then** {th}
@@ -228,22 +229,22 @@ def rewrite_use_cases(
             )
     else:
         ucs.append(
-            f"""## UC-01 — Comportamento principal de `{fid}`
+            f"""## UC-01 — Main behavior of `{fid}`
 
-- **Actor:** usuário / consumidor da API
-- **Given** o módulo `{fid}` está disponível
-- **When** a operação principal descrita em requirements é executada
-- **Then** {description[:180] or "o resultado esperado na SPEC é obtido"}
+- **Actor:** user / API consumer
+- **Given** the module `{fid}` is available
+- **When** the main operation described in requirements is executed
+- **Then** {description[:180] or "the result expected in the SPEC is obtained"}
 
-## UC-02 — Lacuna de teste
+## UC-02 — Test gap
 
-- **Actor:** engenharia
-- **Given** não há testes unitários mapeados para `{fid}`
-- **When** a feature evolui
-- **Then** um teste automatizado é adicionado e o acceptance é regenerado
+- **Actor:** engineering
+- **Given** no unit tests are mapped to `{fid}`
+- **When** the feature evolves
+- **Then** an automated test is added and the acceptance file is regenerated
 """
         )
-    write(dest / "use-cases.md", f"# Use Cases — {fid}\n\n> Derivados de testes/código em {date.today().isoformat()}.\n\n" + "\n".join(ucs))
+    write(dest / "use-cases.md", f"# Use Cases — {fid}\n\n> Derived from tests/code on {date.today().isoformat()}.\n\n" + "\n".join(ucs))
 
 
 # ── ADR ─────────────────────────────────────────────────────────────────────
@@ -262,7 +263,7 @@ def detect_integrations(repo: Path, stack: dict, readme: str) -> list[str]:
         ("RabbitMQ", ["rabbitmq"]),
         ("Docker Compose", ["docker-compose", "compose"]),
         ("Semantic Kernel", ["semantic kernel", "semantickernel"]),
-        ("MediatR-style / Mediator", ["dotrmediator", "imediator", "mediatr"]),
+        ("MediatR-style / Mediator", ["imediator", "mediatr"]),
         ("Flutter", ["flutter", "pubspec"]),
         ("ASP.NET Core", ["aspnetcore", "asp.net", "microsoft.aspnetcore"]),
         ("Qdrant / FAISS", ["qdrant", "faiss"]),
@@ -297,39 +298,39 @@ def detect_integrations(repo: Path, stack: dict, readme: str) -> list[str]:
 def write_adr(repo: Path, harness: Path, stack: dict, readme: str, arch_style: str) -> None:
     integrations = detect_integrations(repo, stack, readme)
     adr_dir = harness / "Knowledge" / "ADR"
-    adr_path = adr_dir / "ADR-0001-baseline-architecture.md"
+    adr_path = adr_dir / "adr-0001-baseline-architecture.md"
 
     alts = []
     if stack.get("dotnet"):
-        alts = ["Monólito anêmico sem camadas", "Microserviços prematuros", "Mediator in-process vs gRPC"]
+        alts = ["Anemic monolith without layers", "Premature microservices", "In-process mediator vs gRPC"]
     elif stack.get("flutter"):
-        alts = ["Online-only com API REST", "State management único global", "Sem criptografia E2E"]
+        alts = ["Online-only with a REST API", "Single global state management", "No E2E encryption"]
     elif stack.get("docs_only"):
-        alts = ["Wiki não versionada", "PDF único sem gates"]
+        alts = ["Unversioned wiki", "Single PDF without gates"]
     else:
-        alts = ["Stack proprietária cloud-first", "Sem padronização de pastas"]
+        alts = ["Proprietary cloud-first stack", "No folder standardization"]
 
     write(
         adr_path,
         f"""# ADR-0001: Baseline architecture — {repo.name}
 
-| Campo | Valor |
+| Field | Value |
 |-------|-------|
 | Status | accepted |
-| Data | {date.today().isoformat()} |
-| Decisores | engineering (inferido do repositório) |
+| Date | {date.today().isoformat()} |
+| Deciders | engineering (inferred from the repository) |
 
 ## Context
 
-O repositório `{repo.name}` precisa de uma linha-base arquitetural explícita para agentes e humanos.
-Decisões foram inferidas do código, README e dependências em {date.today().isoformat()}.
+The `{repo.name}` repository needs an explicit architectural baseline for agents and humans.
+Decisions were inferred from the code, README and dependencies on {date.today().isoformat()}.
 
 ## Decision
 
-- **Estilo:** {arch_style}
-- **Integrações adotadas:** {', '.join(integrations) if integrations else 'ver README'}
-- **Harness:** pasta `.ai-harness/` como contrato operacional (Specs + Agents + Governance)
-- **Aceite:** critérios de aceitação amarrados a testes unitários existentes (`AC-T*`)
+- **Style:** {arch_style}
+- **Adopted integrations:** {', '.join(integrations) if integrations else 'see README'}
+- **Harness:** `.ai-harness/` folder as the operational contract (Specs + Agents + Governance)
+- **Acceptance:** acceptance criteria tied to existing unit tests (`AC-T*`)
 
 ## Alternatives considered
 
@@ -337,43 +338,45 @@ Decisões foram inferidas do código, README e dependências em {date.today().is
 
 ## Consequences
 
-### Positivas
-- Agentes têm âncora clara (Knowledge + ADR)
-- Mudanças estruturais exigem novo ADR
-- Testes viram contrato de aceite
+### Positive
+- Agents have a clear anchor (Knowledge + ADR)
+- Structural changes require a new ADR
+- Tests become the acceptance contract
 
-### Negativas / riscos
-- ADR inferido pode precisar revisão humana
-- Integrações listadas refletem o estado atual do código, não o roadmap
+### Negative / risks
+- An inferred ADR may need human review
+- Listed integrations reflect the current state of the code, not the roadmap
 
 ## Links
 
-- `Knowledge/Architecture.md`
-- `Knowledge/Domain.md`
+- `Knowledge/architecture.md`
+- `Knowledge/domain.md`
 - README.md
 """,
     )
 
     write(
-        adr_dir / "README.md",
+        adr_dir / "readme.md",
         f"""# ADR — Architecture Decision Records
 
-## Índice
+## Index
 
-| ID | Título | Status | Data |
-|----|--------|--------|------|
-| ADR-0001 | [Baseline architecture](./ADR-0001-baseline-architecture.md) | accepted | {date.today().isoformat()} |
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| ADR-0001 | [Baseline architecture](./adr-0001-baseline-architecture.md) | accepted | {date.today().isoformat()} |
 
-## Quando criar
+## When to create
 
-- Nova dependência significativa
-- Mudança de estilo arquitetural
-- Integração externa / vendor
-- Trade-off de performance, segurança ou custo
+- New significant dependency
+- Change of architectural style
+- External integration / vendor
+- Performance, security or cost trade-off with systemic impact
 
-## Template
+## How
 
-Ver [template.md](./template.md).
+1. Copy [template.md](./template.md) → `adr-xxxx-short-title.md`
+2. Fill in Context / Decision / Consequences
+3. Update this index
 """,
     )
 
@@ -396,35 +399,35 @@ def write_governance(repo: Path, harness: Path, stack: dict, integrations: list[
 
     extra: list[str] = []
     if has_secrets or "firebase" in " ".join(integrations).lower():
-        extra.append("Arquivos locais de config (`dart_defines`, `appsettings`, service accounts) permanecem gitignored.")
+        extra.append("Local config files (`dart_defines`, `appsettings`, service accounts) stay gitignored.")
     if has_ai:
-        extra.append("Feature de IA detectada — prompts sem dados de produção; modelos OSS/local primeiro.")
+        extra.append("AI feature detected — no production data in prompts; OSS/local models first.")
     if stack.get("dotnet"):
-        extra.append("Stack .NET: aplicar domínio rico (`Governance/architecture.md`).")
+        extra.append(".NET stack: apply the rich domain model (`Governance/architecture.md`).")
 
     sec_body = (
-        f"Gerado em {date.today().isoformat()} para `{repo.name}`.\n\n"
-        f"**Integrações detectadas:** {', '.join(integrations) if integrations else 'ver Knowledge/Architecture.md'}\n\n"
-        + (("**Notas:**\n" + "\n".join(f"- {r}" for r in extra) + "\n") if extra else "")
-        + "A baseline canônica (secrets, PII, OSS, IA) permanece nas seções acima — este overlay não a substitui.\n"
+        f"Generated on {date.today().isoformat()} for `{repo.name}`.\n\n"
+        f"**Detected integrations:** {', '.join(integrations) if integrations else 'see Knowledge/architecture.md'}\n\n"
+        + (("**Notes:**\n" + "\n".join(f"- {r}" for r in extra) + "\n") if extra else "")
+        + "The canonical baseline (secrets, PII, OSS, AI) remains in the sections above — this overlay does not replace it.\n"
     )
-    fill.upsert_project_section(harness / "Governance/security.md", "Projeto (detectado)", sec_body)
+    fill.upsert_project_section(harness / "Governance/security.md", "Project (detected)", sec_body)
 
     cost_bits = [
-        f"Gerado em {date.today().isoformat()} para `{repo.name}`.",
-        "Preferência OSS da baseline permanece obrigatória.",
+        f"Generated on {date.today().isoformat()} for `{repo.name}`.",
+        "The baseline OSS preference remains mandatory.",
     ]
     if has_cloud:
-        cost_bits.append("Cloud detectado: free tier / self-host; upgrade de SKU = **ask**.")
+        cost_bits.append("Cloud detected: free tier / self-host; SKU upgrade = **ask**.")
     if has_ai:
-        cost_bits.append("IA detectada: Ollama/local primeiro; API paga só com autorização.")
+        cost_bits.append("AI detected: Ollama/local first; paid API only with authorization.")
     if stack.get("dotnet") or stack.get("flutter"):
-        cost_bits.append("CI: testes do escopo da feature, não a suíte inteira a cada iteração.")
+        cost_bits.append("CI: run the feature-scope tests, not the whole suite on every iteration.")
     if "docker" in " ".join(integrations).lower():
-        cost_bits.append("Não subir stack compose completa só para teste unitário.")
+        cost_bits.append("Do not start the full compose stack just for unit tests.")
     fill.upsert_project_section(
         harness / "Governance/cost.md",
-        "Projeto (detectado)",
+        "Project (detected)",
         "\n".join(f"- {b}" for b in cost_bits) + "\n",
     )
 
@@ -441,50 +444,77 @@ def write_agents_workflows(repo: Path, harness: Path, stack: dict) -> None:
     elif stack.get("dotnet"):
         build_c = f"dotnet build {sln}" if sln else "dotnet build"
         test_c = f"dotnet test {sln}" if sln else "dotnet test"
-        code_root = "src/ ou Apis/Services/Features/"
+        code_root = "src/**/Features/<Name>/"
+    elif stack.get("java"):
+        maven = (repo / "pom.xml").exists()
+        build_c = "./mvnw -q verify -DskipTests" if maven else "./gradlew build -x test"
+        test_c = "./mvnw test" if maven else "./gradlew test"
+        code_root = "src/main/java/**/features/<feature>/"
+    elif stack.get("angular"):
+        build_c = "npm run build"
+        test_c = "npm test"
+        code_root = "src/app/features/<id>/"
+    elif stack.get("node"):
+        build_c = "npm run build"
+        test_c = "npm test"
+        code_root = "src/features/<id>/"
+    elif stack.get("python"):
+        build_c = "python -m compileall -q ."
+        test_c = "pytest tests/features/<id>/"
+        code_root = "<pkg>/features/<id>/"
     else:
-        build_c = "ver README"
-        test_c = "ver README"
-        code_root = "."
+        extra = next(
+            (e for e in fill.EXTRA_STACKS if stack.get(e[0]) and (e[2] or e[4])),
+            None,
+        )
+        build_c = extra[3][1] if extra and extra[3] else "see README"
+        test_c = extra[2][1] if extra and extra[2] else "see README"
+        code_root = extra[4] if extra and extra[4] else "."
 
     write(
         harness / "Agents/project.md",
         f"""# Project context — {repo.name}
 
-> Gerado por enrich-harness em {date.today().isoformat()}. Os papéis em `developer.md` / `tester.md` **não** são substituídos.
+> Generated by enrich-harness on {date.today().isoformat()}. The roles in `developer.md` / `tester.md` are **not** replaced.
 
 ## Paths
 
-- Código: `{code_root}`
+- Code: `{code_root}`
 - Specs: `Specification/features/<id>/`
-- Testes: pasta da feature (`Knowledge/Standards.md`)
+- Tests: feature folder (`Knowledge/standards.md`)
 
-## Comandos (`auto`)
+## Active stack packs
+
+Read **only** these (`Knowledge/stacks/readme.md`):
+
+{fill.packs_markdown(stack)}
+
+## Commands (`auto`)
 
 ```bash
 {build_c}
 {test_c}
 ```
 
-## Notas
+## Notes
 
-- Aceite: AC-T* verdes ou AC-G* + stub na pasta da feature
+- Acceptance: AC-T* green or AC-G* + stub in the feature folder
 - OSS / cloud: `Governance/cost.md`
 """,
     )
 
 
-# ── Stubs de teste para lacunas ─────────────────────────────────────────────
+# ── Test stubs for gaps ────────────────────────────────────────────────────
 
 
 def ensure_test_stubs(repo: Path, stack: dict, features: list[tuple[str, str, str]], test_map: dict) -> int:
-    """Cria stubs mínimos para features sem testes. Retorna qtd criada."""
+    """Create minimal stubs for features without tests. Returns how many were created."""
     created = 0
     for fid, code, desc in features:
         if test_map.get(fid):
             continue
         if fid in ("core",) and not stack.get("flutter") and not stack.get("dotnet"):
-            # docs-only: não criar stubs de código
+            # docs-only: do not create code stubs
             continue
 
         if stack.get("flutter"):
@@ -493,14 +523,14 @@ def ensure_test_stubs(repo: Path, stack: dict, features: list[tuple[str, str, st
                 continue
             write(
                 stub,
-                f"""// Stub gerado pelo enrich-harness — substitua por testes reais.
+                f"""// Stub generated by enrich-harness — replace with real tests.
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {{
-  test('HARNESS_GAP: feature `{fid}` precisa de cobertura unitária', () {{
-    // TODO: espelhar Specification/features/{fid}/requirements.md
-    // Código: {code}
-    expect(true, isTrue, reason: 'Remova este stub após adicionar testes reais');
+  test('HARNESS_GAP: feature `{fid}` needs unit coverage', () {{
+    // TODO: mirror Specification/features/{fid}/requirements.md
+    // Code: {code}
+    expect(true, isTrue, reason: 'Remove this stub after adding real tests');
   }});
 }}
 """,
@@ -526,14 +556,14 @@ void main() {{
                 continue
             write(
                 stub,
-                f"""// Stub gerado pelo enrich-harness — substitua por testes reais.
+                f"""// Stub generated by enrich-harness — replace with real tests.
 using Xunit;
 
 namespace {ns};
 
 public class {safe}HarnessGapTests
 {{
-    [Fact(Skip = "HARNESS_GAP: feature `{fid}` — implementar cobertura. Código: {code}")]
+    [Fact(Skip = "HARNESS_GAP: feature `{fid}` — implement coverage. Code: {code}")]
     public void Feature_{safe}_NeedsUnitCoverage()
     {{
         Assert.True(true);
@@ -549,29 +579,33 @@ public class {safe}HarnessGapTests
 # ── Requirements refresh from code symbols ──────────────────────────────────
 
 
+# Current heading first; the legacy Portuguese one is still recognized so old projects are not duplicated.
+SYMBOLS_HEADINGS = ("### Code types / symbols", "### Tipos / símbolos do código")
+
+
 def enrich_requirements(dest: Path, fid: str, code: str, desc: str, symbols: list[str]) -> None:
     path = dest / "requirements.md"
     base = read(path)
-    if "### Tipos / símbolos do código" in base:
+    if any(h in base for h in SYMBOLS_HEADINGS):
         return
-    extra = "\n".join(f"- `{s}`" for s in symbols[:15]) if symbols else "- (nenhum tipo Domain mapeado nesta pasta)"
+    extra = "\n".join(f"- `{s}`" for s in symbols[:15]) if symbols else "- (no Domain type mapped in this folder)"
     write(
         path,
-        (base or f"# Requirements — {fid}\n\n## Intenção\n\n{desc}\n")
+        (base or f"# Requirements — {fid}\n\n## Intent\n\n{desc}\n")
         + f"""
 
-### Tipos / símbolos do código
+{SYMBOLS_HEADINGS[0]}
 
-Código: `{code}`
+Code: `{code}`
 
 {extra}
 
-> Atualizado por enrich-harness em {date.today().isoformat()}.
+> Updated by enrich-harness on {date.today().isoformat()}.
 """,
     )
 
 
-# ── Orquestração ────────────────────────────────────────────────────────────
+# ── Orchestration ───────────────────────────────────────────────────────────
 
 
 def enrich_repo(repo: Path) -> dict:
@@ -579,7 +613,7 @@ def enrich_repo(repo: Path) -> dict:
     if not harness.is_dir():
         return {"ok": False}
 
-    # Reaproveita descoberta do deep-fill
+    # Reuse the deep-fill discovery
     readme = fill.read_readme(repo)
     stack = fill.detect_stack(repo)
     table = deep.parse_feature_tables(readme)
@@ -587,7 +621,7 @@ def enrich_repo(repo: Path) -> dict:
     all_tests = deep.discover_unit_tests(repo)
     test_map = deep.map_tests_to_features(repo, features, all_tests)
 
-    arch_style = "ver Knowledge/Architecture.md"
+    arch_style = "see Knowledge/architecture.md"
     if stack.get("flutter"):
         arch_style = "Feature-first (Flutter) + BLoC/Cubit"
     elif stack.get("dotnet"):
@@ -598,12 +632,12 @@ def enrich_repo(repo: Path) -> dict:
             else ".NET modular"
         )
     elif stack.get("docs_only"):
-        arch_style = "Documentação / framework versionado"
+        arch_style = "Versioned documentation / framework"
 
     integrations = detect_integrations(repo, stack, readme)
 
     # Domain glossary
-    write(harness / "Knowledge/Domain.md", build_glossary(repo, stack, features))
+    write(harness / "Knowledge/domain.md", build_glossary(repo, stack, features))
 
     # ADR
     write_adr(repo, harness, stack, readme, arch_style)
@@ -625,7 +659,7 @@ def enrich_repo(repo: Path) -> dict:
 
     stubs = ensure_test_stubs(repo, stack, features, test_map)
 
-    # Regenera acceptance após stubs (para incluir novos testes)
+    # Regenerate acceptance after the stubs (to include the new tests)
     if stubs:
         all_tests = deep.discover_unit_tests(repo)
         test_map = deep.map_tests_to_features(repo, features, all_tests)
@@ -637,17 +671,17 @@ def enrich_repo(repo: Path) -> dict:
             )
 
     write(
-        harness / "Knowledge/README.md",
+        harness / "Knowledge/readme.md",
         f"""# Knowledge — {repo.name}
 
-Atualizado por `enrich-harness.py` em {date.today().isoformat()}.
+Updated by `enrich-harness.py` on {date.today().isoformat()}.
 
-| Documento | Conteúdo |
-|-----------|----------|
-| [Architecture.md](./Architecture.md) | Estilo e pastas |
-| [Domain.md](./Domain.md) | Glossário completo (código + features) |
-| [Standards.md](./Standards.md) | Build/test/git |
-| [ADR/](./ADR/) | Decisões (ADR-0001 baseline) |
+| Document | Content |
+|----------|---------|
+| [architecture.md](./architecture.md) | Style and folders |
+| [domain.md](./domain.md) | Full glossary (code + features) |
+| [standards.md](./standards.md) | Build/test/git |
+| [ADR/](./ADR/) | Decisions (ADR-0001 baseline) |
 """,
     )
 
@@ -669,7 +703,8 @@ def main() -> int:
 
     ok = stubs_total = 0
     for repo in repos:
-        if repo.name == "harness-engineering" and (repo / "template").is_dir():
+        if fill.is_harness_kit(repo):
+            print(f"[SKIP] {repo.name} — kit-template")
             continue
         r = enrich_repo(repo)
         if not r.get("ok"):
@@ -681,7 +716,7 @@ def main() -> int:
         ok += 1
         stubs_total += r["stubs"]
 
-    print(f"\nRepos: {ok} | Stubs de teste criados: {stubs_total}")
+    print(f"\nRepos: {ok} | Test stubs created: {stubs_total}")
     return 0
 
 

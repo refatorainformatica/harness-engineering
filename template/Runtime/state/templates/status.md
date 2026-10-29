@@ -8,7 +8,7 @@ role: architect | developer | reviewer | tester
 updated: REPLACE_ME
 ```
 
-## Bloqueio / falha
+## Block / failure
 
-- Motivo:
-- Decisão necessária:
+- Reason:
+- Decision needed:

@@ -1,6 +1,6 @@
 # Sandbox
 
-Isolar mudanças quando há WIP alheio ou risco.
+Isolate changes when there is someone else's WIP or risk.
 
 ```bash
 SANDBOX_DIR="../{{PROJECT}}-harness-sandbox"
@@ -8,10 +8,10 @@ git worktree add -b "sandbox/<slug>" "$SANDBOX_DIR" HEAD
 cd "$SANDBOX_DIR"
 ```
 
-| Regra | Detalhe |
-|-------|---------|
-| Path | `../{{PROJECT}}-harness-sandbox` ou `Runtime/sandbox/worktrees/<slug>` (gitignored) |
-| Secrets | Não copiar `.env` / credentials |
-| Merge de volta | **ask** |
+| Rule | Detail |
+|------|--------|
+| Path | `../{{PROJECT}}-harness-sandbox` or `Runtime/sandbox/worktrees/<slug>` (gitignored) |
+| Secrets | Do not copy `.env` / credentials |
+| Merge back | **ask** |
 
-Não precisa de sandbox se working tree limpa e branch dedicada.
+No sandbox needed if the working tree is clean and the branch is dedicated.

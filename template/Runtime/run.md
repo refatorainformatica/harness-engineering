@@ -1,28 +1,28 @@
-# Runtime — Iniciar uma run
+# Runtime — Start a run
 
-## Quando criar
+## When to create
 
-Toda tarefa que altere código ou specs deve ter uma run em `.ai-harness/Runtime/state/runs/`.
+Every task that changes code or specs must have a run in `.ai-harness/Runtime/state/runs/`.
 
-## Passos
+## Steps
 
 1. `run-id`: `YYYYMMDD-HHMM-<slug>`
-2. Criar pasta com STATUS, CONTEXT, CHECKLIST, LOG (templates em `state/templates/`).
-3. Escolher Workflow + papel inicial (Agents).
-4. Ler Specification + Knowledge + permissions.
-5. Entrar no LOOP: `INIT` → `PLAN`.
+2. Create a folder with STATUS, CONTEXT, CHECKLIST, LOG (templates in `state/templates/`).
+3. Choose Workflow + initial role (Agents).
+4. Read Specification + Knowledge + permissions.
+5. Enter the LOOP: `INIT` → `PLAN`.
 
-## CONTEXT (mínimo)
+## CONTEXT (minimum)
 
-- Pedido do usuário
+- User request
 - Branch
 - Workflow (`feature` \| `bug` \| `refactoring` \| `migration`)
 - Feature id(s)
-- Papel ativo
-- Gates / criticidade
-- Isolamento: raiz ou sandbox
+- Active role
+- Gates / criticality
+- Isolation: root or sandbox
 
-## Encerrar
+## Close
 
-- `DONE` — checklist + resumo no LOG
-- `BLOCKED` / `FAILED` — motivo claro no STATUS
+- `DONE` — checklist + summary in the LOG
+- `BLOCKED` / `FAILED` — clear reason in STATUS

@@ -1,18 +1,18 @@
-# ADR-XXXX: <título>
+# ADR-XXXX: <title>
 
-| Campo | Valor |
+| Field | Value |
 |-------|-------|
 | Status | proposed \| accepted \| deprecated \| superseded |
-| Data | YYYY-MM-DD |
-| Decisores | … |
+| Date | YYYY-MM-DD |
+| Deciders | … |
 
 ## Context
 
-Qual problema ou força motiva a decisão?
+What problem or force motivates the decision?
 
 ## Decision
 
-O que foi decidido?
+What was decided?
 
 ## Alternatives considered
 
@@ -21,13 +21,13 @@ O que foi decidido?
 
 ## Consequences
 
-### Positivas
+### Positive
 - …
 
-### Negativas / riscos
+### Negative / risks
 - …
 
 ## Links
 
-- Specs / features afetadas:
+- Affected specs / features:
 - PRs:

@@ -1,14 +1,23 @@
 # Tools — Test
 
-| ID | Comando / ação | Notas |
-|----|----------------|-------|
-| `dotnet.test` | `dotnet test` | auto; filtro/pasta da feature (`Features/<Name>/`) |
-| `node.test` | `npm test` / equivalente | auto; paths da feature |
-| `flutter.test` | `flutter test test/features/<id>/` | auto; paths da feature |
-| `test.custom` | script do projeto | **ask** se não documentado |
+| ID | Command / action | Notes |
+|----|------------------|-------|
+| `dotnet.test` | `dotnet test` | auto; feature filter/folder (`Features/<Name>/`) |
+| `node.test` | `npm test` / equivalent | auto; feature paths |
+| `jvm.test` | `mvn test -Dtest=<Pattern>` / `./gradlew test --tests <pattern>` | auto; feature paths (optional) |
+| `python.test` | `pytest tests/features/<id>/` | auto; feature paths (optional) |
+| `flutter.test` | `flutter test test/features/<id>/` | auto; feature paths |
+| `go.test` | `go test ./internal/features/<feature>/... -coverprofile=coverage.out` | auto; feature paths (optional) |
+| `rust.test` | `cargo test features::<feature>` / `cargo llvm-cov` | auto; feature paths (optional) |
+| `php.test` | `vendor/bin/phpunit tests/Unit/Features/<Feature>` / `vendor/bin/pest` | auto; feature paths (optional) |
+| `ruby.test` | `bundle exec rspec spec/features/<feature>` | auto; feature paths (optional) |
+| `android.test` | `./gradlew testDebugUnitTest` | auto; unit tests only (optional) |
+| `ios.test` | `xcodebuild test -scheme <Scheme> -destination '<simulator>' -enableCodeCoverage YES` / `swift test` | auto (optional) |
+| `data.test` | `dbt test --target dev` + `pytest` for job code | auto; never against production (optional) |
+| `test.custom` | project script | **ask** if not documented |
 
-Novos testes: **sempre** sob a pasta da feature (`Standards.md`). Fixtures partilhadas em `Shared/`.
+New tests: **always** under the feature folder (`standards.md`). Shared fixtures in `Shared/`.
 
-Lacuna **AC-G\***: stub mínimo na pasta da feature, depois comando de teste do escopo.
+Gap **AC-G\***: minimal stub in the feature folder, then the scoped test command.
 
-Registre sempre o ID e o resultado no LOG da run.
+Always record the ID and the result in the run LOG.

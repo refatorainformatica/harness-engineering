@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Preenche .ai-harness/ com dados inferidos do repositório."""
+"""Fill .ai-harness/ with data inferred from the repository (the target project, not this kit)."""
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from datetime import date
@@ -32,10 +33,25 @@ SKIP_DIRS = {
 DOTNET_TEST_GLOBS = ("*Tests*", "*Test", "tests", "test")
 
 KIT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_WORKSPACE = KIT_ROOT.parent
+DEFAULT_WORKSPACE = Path.cwd()
+
+
+def is_harness_kit(repo: Path) -> bool:
+    """True if the path is this template kit (not a consuming project)."""
+    return (repo / "template" / "agents.md").is_file() and (repo / "scripts" / "init-harness.sh").is_file()
 
 HARNESS_PROJECT_START = "<!-- HARNESS:PROJECT-START -->"
 HARNESS_PROJECT_END = "<!-- HARNESS:PROJECT-END -->"
+
+# Generated section titles (English) -> titles written by the legacy Portuguese kit.
+# Used so that re-running fill/enrich on an old project replaces the old section instead of duplicating it.
+LEGACY_SECTION_TITLES: dict[str, tuple[str, ...]] = {
+    "Stack and commands (generated)": ("Stack e comandos (gerado)",),
+    "Project (detected)": ("Projeto (detectado)",),
+}
+
+# Heading that marks the canonical standards.md (new English heading + legacy Portuguese one).
+STANDARDS_FEATURE_HEADINGS = ("Feature-first organization", "Organização por feature")
 
 
 def read_readme(repo: Path) -> str:
@@ -47,7 +63,7 @@ def read_readme(repo: Path) -> str:
 
 
 def readme_summary(text: str) -> tuple[str, str]:
-    # Remove banners HTML comuns
+    # Strip common HTML banners
     text = re.sub(r"<p[^>]*>.*?</p>\s*", "", text, flags=re.DOTALL | re.IGNORECASE)
     text = re.sub(r"<[^>]+>", "", text)
 
@@ -68,20 +84,181 @@ def readme_summary(text: str) -> tuple[str, str]:
             body.append(re.sub(r"\*\*([^*]+)\*\*", r"\1", s))
             if len(" ".join(body)) > 500:
                 break
-    vision = " ".join(body[:4]).strip() or "Projeto documentado em README.md."
-    return title or "Projeto", vision[:800]
+    vision = " ".join(body[:4]).strip() or "Project documented in README.md."
+    return title or "Project", vision[:800]
+
+
+def _first(repo: Path, pattern: str) -> Path | None:
+    for path in repo.glob(pattern):
+        if not SKIP_DIRS & set(path.relative_to(repo).parts):
+            return path
+    return None
+
+
+def _package_deps(repo: Path) -> set[str]:
+    deps: set[str] = set()
+    for pkg in [repo / "package.json", *repo.glob("*/package.json"), *repo.glob("*/*/package.json")]:
+        if not pkg.is_file() or SKIP_DIRS & set(pkg.relative_to(repo).parts):
+            continue
+        try:
+            data = json.loads(pkg.read_text(encoding="utf-8", errors="replace"))
+        except ValueError:
+            continue
+        for key in ("dependencies", "devDependencies", "peerDependencies"):
+            deps.update((data.get(key) or {}).keys())
+    return deps
+
+
+def _text_of(repo: Path, patterns: list[str], limit: int = 200) -> str:
+    chunks: list[str] = []
+    for pattern in patterns:
+        for path in repo.glob(pattern):
+            if SKIP_DIRS & set(path.relative_to(repo).parts) or not path.is_file():
+                continue
+            chunks.append(path.read_text(encoding="utf-8", errors="replace"))
+            if len(chunks) >= limit:
+                return "\n".join(chunks)
+    return "\n".join(chunks)
+
+
+def detect_cloud(repo: Path, deps: set[str], csproj_text: str) -> dict[str, bool]:
+    """DevOps + cloud providers (AWS / Azure / GCP) from IaC, pipelines and SDKs."""
+    tf = _text_of(repo, ["**/*.tf"])
+    manifests = _text_of(repo, ["requirements*.txt", "pyproject.toml", "pom.xml", "build.gradle*", "**/build.gradle*"], 50)
+    all_deps = " ".join(deps) + " " + csproj_text + " " + manifests
+    has = lambda *patterns: any(_first(repo, p) for p in patterns)  # noqa: E731
+    aws = (
+        'provider "aws"' in tf
+        or has("cdk.json", "serverless.yml", "samconfig.toml", "buildspec.yml", "**/buildspec.yml")
+        or any(k in all_deps for k in ("@aws-sdk/", "aws-cdk", "AWSSDK.", "boto3", "software.amazon.awssdk", "com.amazonaws"))
+    )
+    azure = (
+        'provider "azurerm"' in tf
+        or 'provider "azapi"' in tf
+        or has("**/*.bicep", "azure-pipelines.yml", "azure.yaml", "**/azure-pipelines*.yml")
+        or any(k in all_deps for k in ("@azure/", "Azure.", "Microsoft.Azure.", "azure-", "com.azure"))
+    )
+    gcp = (
+        'provider "google"' in tf
+        or has("cloudbuild.yaml", "cloudbuild.yml", "app.yaml", "**/cloudbuild.yaml")
+        or any(k in all_deps for k in ("@google-cloud/", "Google.Cloud.", "google-cloud-", "com.google.cloud", "firebase-admin"))
+    )
+    devops = (
+        aws or azure or gcp or bool(tf)
+        or has("Dockerfile", "**/Dockerfile", "docker-compose.yml", "compose.yaml", "**/Chart.yaml",
+               "kustomization.yaml", "**/kustomization.yaml", ".github/workflows/*.yml", ".gitlab-ci.yml", "Jenkinsfile")
+    )
+    oci = (
+        'provider "oci"' in tf
+        or any(k in all_deps for k in ("oci-sdk", "oci-common", "com.oracle.oci.sdk", "OCI.DotNetSDK", "\noci\n", "oci=="))
+    )
+    devops = devops or oci
+    return {"devops": devops, "aws": aws, "azure": azure, "gcp": gcp, "oci": oci}
+
+
+def detect_extra(repo: Path, deps: set[str]) -> dict[str, bool]:
+    """Stacks beyond the original set: Go, Rust, PHP, Ruby, Vue, React Native, Android, iOS, database, data/ML."""
+    has = lambda *patterns: any(_first(repo, p) for p in patterns)  # noqa: E731
+    gradle = _text_of(repo, ["build.gradle*", "*/build.gradle*", "settings.gradle*"], 30)
+    py_manifests = _text_of(repo, ["requirements*.txt", "pyproject.toml", "setup.py"], 20).lower()
+    return {
+        "go": has("go.mod", "*/go.mod"),
+        "rust": has("Cargo.toml", "*/Cargo.toml"),
+        "php": has("composer.json", "*/composer.json"),
+        "ruby": has("Gemfile", "*/Gemfile"),
+        "vue": bool({"vue", "nuxt"} & deps),
+        "react_native": bool({"react-native", "expo"} & deps),
+        "android": has("**/AndroidManifest.xml") or "com.android.application" in gradle or "com.android.library" in gradle,
+        "ios": has("*.xcodeproj", "*/*.xcodeproj", "*.xcworkspace", "Package.swift", "Podfile", "*/Podfile"),
+        "database": has(
+            "flyway.conf", "**/db/migration/*.sql", "**/changelog/*.xml", "**/db.changelog-master.*", "**/Migrations/*.cs",
+            "alembic.ini", "**/migrations/*.py", "**/prisma/schema.prisma", "db/migrate/*.rb", "knexfile.*",
+            "**/migrations/*.sql", "**/migrations/*.up.sql",
+        ),
+        "data": has("dbt_project.yml", "*/dbt_project.yml", "**/*.ipynb", "**/dags/*.py")
+        or any(k in py_manifests for k in ("pyspark", "apache-airflow", "dagster", "prefect", "dbt-core", "scikit-learn", "torch", "mlflow")),
+    }
+
+
+# Per-stack facts for the stacks added by detect_extra (and OCI): stack row, test tool, validation tool, code root.
+EXTRA_STACKS = [
+    ("go", "| Backend | Go |", ("go.test", "go test ./..."), ("go.vet", "go vet ./..."), "internal/features/<feature>/"),
+    ("rust", "| Backend | Rust |", ("rust.test", "cargo test"), ("rust.clippy", "cargo clippy -- -D warnings"), "src/features/<feature>/"),
+    ("php", "| Backend | PHP (Laravel / Symfony) |", ("php.test", "vendor/bin/phpunit"), ("php.stan", "vendor/bin/phpstan analyse"), "app/Features/<Feature>/"),
+    ("ruby", "| Backend | Ruby / Rails |", ("ruby.test", "bundle exec rspec"), ("ruby.lint", "bundle exec rubocop"), "app/features/<feature>/"),
+    ("vue", "| Frontend | Vue / Nuxt |", None, None, "src/features/<id>/"),
+    ("react_native", "| Mobile | React Native |", None, None, "src/features/<id>/"),
+    ("android", "| Mobile | Android (Kotlin) |", ("android.test", "./gradlew testDebugUnitTest"), ("android.lint", "./gradlew lint"), "feature/<feature>/"),
+    ("ios", "| Mobile | iOS (Swift) |", ("ios.test", "xcodebuild test -scheme <Scheme> -destination '<simulator>' -enableCodeCoverage YES"), ("ios.lint", "swiftlint"), "<App>/Features/<Feature>/"),
+    ("database", "| Data | Schema migrations |", None, ("db.migrate.validate", "<migration tool> validate  # e.g. flyway validate, alembic check"), None),
+    ("data", "| Data | dbt / Spark / notebooks / ML |", ("data.test", "dbt test --target dev && pytest"), ("data.build", "dbt build --select state:modified+ --target dev"), None),
+    ("oci", "| Cloud | Oracle Cloud (OCI) |", None, None, None),
+]
 
 
 def detect_stack(repo: Path) -> dict[str, bool]:
+    deps = _package_deps(repo)
+    csproj = [p for p in repo.glob("**/*.csproj") if not SKIP_DIRS & set(p.relative_to(repo).parts)][:20]
+    csproj_text = " ".join(p.read_text(encoding="utf-8", errors="replace") for p in csproj)
+    has_package_json = bool(_first(repo, "package.json") or _first(repo, "*/package.json") or _first(repo, "*/*/package.json"))
     return {
-        "dotnet": bool(list(repo.glob("*.sln")) + list(repo.glob("*.slnx")) + list(repo.glob("**/*.csproj"))[:1]),
+        "dotnet": bool(list(repo.glob("*.sln")) + list(repo.glob("*.slnx")) + csproj[:1]),
+        "blazor": bool(_first(repo, "**/*.razor")) or "Microsoft.AspNetCore.Components" in csproj_text,
+        "java": bool(_first(repo, "pom.xml") or _first(repo, "build.gradle") or _first(repo, "build.gradle.kts")
+                     or _first(repo, "*/pom.xml") or _first(repo, "*/build.gradle*")),
         "flutter": (repo / "pubspec.yaml").exists(),
-        "node": (repo / "package.json").exists(),
-        "python": (repo / "pyproject.toml").exists() or (repo / "requirements.txt").exists(),
+        "node": has_package_json,
+        "typescript": has_package_json or bool(_first(repo, "tsconfig.json")),
+        "angular": bool(_first(repo, "angular.json") or _first(repo, "*/angular.json")) or "@angular/core" in deps,
+        "react": "react" in deps,
+        "node_backend": bool({"express", "fastify", "@nestjs/core", "koa", "@hapi/hapi"} & deps),
+        "python": (repo / "pyproject.toml").exists() or (repo / "requirements.txt").exists() or (repo / "setup.py").exists(),
+        **detect_cloud(repo, deps, csproj_text),
+        **detect_extra(repo, deps),
         "docker": (repo / "docker-compose.yml").exists() or (repo / "Dockerfile").exists(),
         "docs_only": (repo / "docs").is_dir() and not list(repo.glob("**/*.csproj"))[:3] and not (repo / "pubspec.yaml").exists(),
         "landing": (repo / "index.html").exists() and (repo / "css").is_dir(),
     }
+
+
+STACK_PACKS = [
+    ("dotnet", "dotnet.md"),
+    ("blazor", "blazor.md"),
+    ("java", "java.md"),
+    ("typescript", "typescript.md"),
+    ("node_backend", "node.md"),
+    ("angular", "angular.md"),
+    ("react", "react.md"),
+    ("flutter", "flutter.md"),
+    ("python", "python.md"),
+    ("go", "go.md"),
+    ("rust", "rust.md"),
+    ("php", "php.md"),
+    ("ruby", "ruby.md"),
+    ("vue", "vue.md"),
+    ("react_native", "react-native.md"),
+    ("android", "android.md"),
+    ("ios", "ios.md"),
+    ("database", "database.md"),
+    ("data", "data.md"),
+    ("devops", "devops.md"),
+    ("aws", "aws.md"),
+    ("azure", "azure.md"),
+    ("gcp", "gcp.md"),
+    ("oci", "oci.md"),
+]
+
+
+def stack_packs(stack: dict[str, bool]) -> list[str]:
+    """Packs from `Knowledge/stacks/` that apply to the detected stack (base + layers)."""
+    return [pack for key, pack in STACK_PACKS if stack.get(key)]
+
+
+def packs_markdown(stack: dict[str, bool]) -> str:
+    packs = stack_packs(stack)
+    if not packs:
+        return "- No pack detected — copy one from `Knowledge/stacks/` as a model (see `stacks/readme.md`)."
+    return "\n".join(f"- `Knowledge/stacks/{p}`" for p in packs)
 
 
 def list_tree(repo: Path, max_depth: int = 2) -> str:
@@ -162,25 +339,43 @@ def write(path: Path, content: str) -> None:
     path.write_text(content.rstrip() + "\n", encoding="utf-8")
 
 
+def _section_pattern(title: str) -> re.Pattern[str]:
+    """Match an unmarked `## <title>` section up to the next `## ` heading (or end of file)."""
+    return re.compile(rf"^## {re.escape(title)}[ \t]*\n.*?(?=^## |\Z)", re.MULTILINE | re.DOTALL)
+
+
 def upsert_project_section(path: Path, title: str, body: str) -> None:
-    """Insert or replace the generated overlay without wiping canonical template rules."""
+    """Insert or replace the generated overlay without wiping canonical template rules.
+
+    Replacement order: the `HARNESS:PROJECT-*` marker block; otherwise an unmarked section with the
+    same title or its legacy Portuguese title (projects installed with the old kit); otherwise append.
+    """
     block = (
         f"{HARNESS_PROJECT_START}\n"
         f"## {title}\n\n"
         f"{body.rstrip()}\n"
         f"{HARNESS_PROJECT_END}\n"
     )
-    if path.is_file():
-        existing = path.read_text(encoding="utf-8", errors="replace")
-        if HARNESS_PROJECT_START in existing and HARNESS_PROJECT_END in existing:
-            pre = existing.split(HARNESS_PROJECT_START)[0].rstrip()
-            post = existing.split(HARNESS_PROJECT_END, 1)[1]
-            text = pre + "\n\n" + block + post.lstrip("\n")
-        else:
-            text = existing.rstrip() + "\n\n" + block
-        write(path, text)
-    else:
+    if not path.is_file():
         write(path, block)
+        return
+    existing = path.read_text(encoding="utf-8", errors="replace")
+    if HARNESS_PROJECT_START in existing and HARNESS_PROJECT_END in existing:
+        pre = existing.split(HARNESS_PROJECT_START)[0].rstrip()
+        post = existing.split(HARNESS_PROJECT_END, 1)[1]
+        text = pre + "\n\n" + block + post.lstrip("\n")
+    else:
+        text = None
+        for candidate in (title, *LEGACY_SECTION_TITLES.get(title, ())):
+            match = _section_pattern(candidate).search(existing)
+            if match:
+                pre = existing[: match.start()].rstrip()
+                post = existing[match.end():].lstrip("\n")
+                text = pre + "\n\n" + block + ("\n" + post if post else "")
+                break
+        if text is None:
+            text = existing.rstrip() + "\n\n" + block
+    write(path, text)
 
 
 def fill_repo(repo: Path) -> None:
@@ -203,130 +398,150 @@ def fill_repo(repo: Path) -> None:
     if stack["dotnet"]:
         arch_style.append("Clean Architecture / CQRS (.NET)" if "mediator" in name.lower() or "flow" in name.lower() else ".NET modular")
     if stack["docs_only"]:
-        arch_style.append("Repositório de documentação / framework")
+        arch_style.append("Documentation / framework repository")
     if stack["landing"]:
-        arch_style.append("Site estático (HTML/CSS/JS)")
+        arch_style.append("Static site (HTML/CSS/JS)")
     if not arch_style:
-        arch_style.append("Consulte README.md e pastas do repositório")
+        arch_style.append("See README.md and the repository folders")
 
     stack_rows = []
     if stack["dotnet"]:
         stack_rows.append(f"| Runtime | .NET ({sln or 'csproj'}) |")
     if stack["flutter"]:
         stack_rows.append("| UI | Flutter / Dart |")
-    if stack["node"]:
+    if stack["blazor"]:
+        stack_rows.append("| UI | Blazor |")
+    if stack["java"]:
+        stack_rows.append("| Backend | Java / Kotlin (JVM) |")
+    if stack["angular"]:
+        stack_rows.append("| Frontend | Angular |")
+    if stack["react"]:
+        stack_rows.append("| Frontend | React |")
+    if stack["node_backend"]:
+        stack_rows.append("| Backend | Node.js |")
+    elif stack["node"] and not (stack["angular"] or stack["react"]):
         stack_rows.append("| Frontend / tooling | Node.js |")
     if stack["python"]:
         stack_rows.append("| Runtime | Python |")
     if stack["docker"]:
         stack_rows.append("| Containers | Docker / docker-compose |")
+    for key, row, _test, _lint, _root in EXTRA_STACKS:
+        if stack.get(key):
+            stack_rows.append(row)
     stack_rows.append(f"| Harness | `.ai-harness/` |")
 
     feature_table = ""
     if features:
         rows = []
         for fid, code, status in features:
-            rows.append(f"| {fid} | [./{fid}/](./{fid}/) | `{code}` | {status} | resumo em README / código |")
+            rows.append(f"| {fid} | [./{fid}/](./{fid}/) | `{code}` | {status} | summary in README / code |")
         feature_table = "\n".join(rows)
     else:
-        feature_table = "| core | [./core/](./core/) | `.` | planned | Preencher conforme evolução |"
+        feature_table = "| core | [./core/](./core/) | `.` | planned | Fill in as the project evolves |"
 
     write(
-        harness / "Knowledge/Architecture.md",
+        harness / "Knowledge/architecture.md",
         f"""# Architecture — {name}
 
-> Gerado automaticamente em {date.today().isoformat()}. Revise e refine.
+> Generated automatically on {date.today().isoformat()}. Review and refine.
 
-## Estilo
+## Style
 
 {chr(10).join('- ' + s for s in arch_style)}
 
-**Feature-first (obrigatório):** pastas de código e de teste seguem a capacidade de negócio. Camadas técnicas ficam **dentro** da feature. Ver `Standards.md`.
+**Feature-first (mandatory):** code and test folders follow the business capability. Technical layers live **inside** the feature. See `standards.md`.
 
-**OSS-first:** open source → self-host → cloud proprietário só com ADR (`Governance/cost.md`).
+**OSS-first:** open source → self-host → proprietary cloud only with an ADR (`Governance/cost.md`).
 
-**Domínio rico** se DDD/Clean Architecture: comportamento nas entidades; Application só orquestra.
+**Rich domain** if DDD/Clean Architecture: behavior lives in the entities; Application only orchestrates.
 
-## Estrutura (topo do repositório)
+## Structure (repository top level)
 
 ```text
 {tree}
 ```
 
-## Raiz de código principal
+## Main code root
 
 `{root.relative_to(repo) if root != repo else '.'}`
 
-## Stack detectada
+## Detected stack
 
-| Camada | Tecnologia |
-|--------|------------|
+| Layer | Technology |
+|-------|------------|
 {chr(10).join(stack_rows)}
 
-## Relação harness ↔ código
+## Harness ↔ code mapping
 
-| Spec feature | Código |
-|--------------|--------|
-| `Specification/features/<id>/` | módulo/pasta correspondente |
+| Spec feature | Code |
+|--------------|------|
+| `Specification/features/<id>/` | matching module/folder |
 
-## Cross-cutting (preencher)
+## Cross-cutting (fill in)
 
-| Peça | Papel |
-|------|--------|
-| DI | ver README / código |
-| Auth | ver README / código |
-| Persistência | ver README / código |
-| Observability | ver README / código |
+| Piece | Role |
+|-------|------|
+| DI | see README / code |
+| Auth | see README / code |
+| Persistence | see README / code |
+| Observability | see README / code |
 
-## Fora de escopo arquitetural (atual)
+## Out of architectural scope (current)
 
-- Consultar README.md e issues abertas
+- See README.md and open issues
 """,
     )
 
     write(
-        harness / "Knowledge/Domain.md",
+        harness / "Knowledge/domain.md",
         f"""# Domain — {name}
 
-## Visão
+## Product vision (summary)
 
 {vision}
 
-## Produto / propósito
+## Product / purpose
 
-**{title}** — ver README.md para detalhes completos.
+**{title}** — see README.md for full details.
 
-## Glossário (inicial)
+## Glossary (ubiquitous language)
 
-| Termo | Significado |
-|-------|-------------|
-| Harness | Estrutura `.ai-harness/` deste repositório |
-| Feature | Unidade em `Specification/features/<id>/` |
-| Run | Execução do agente em `Runtime/state/runs/` |
+| Term | Meaning |
+|------|---------|
+| Harness | `.ai-harness/` structure of this repository |
+| Feature | Unit in `Specification/features/<id>/` |
+| Run | Agent execution in `Runtime/state/runs/` |
 
-> Adicione termos do domínio conforme o produto evolui.
+> Add domain terms as the product evolves.
 
-## Criticidade
+## Criticality
 
-- Perfil: {"IA assistiva" if "ai" in name.lower() else "software tradicional"}
-- Risco: médio (revisar com o time)
+- Profile: {"assistive AI" if "ai" in name.lower() else "traditional software"}
+- Risk: medium (review with the team)
 - Owner: engineering
 """,
     )
 
-    test_cmd = "dotnet test"
+    extra_tests = [t for key, _r, t, _l, _c in EXTRA_STACKS if t and stack.get(key)]
+    test_cmd = "dotnet test" if stack["dotnet"] else (extra_tests[0][1] if extra_tests else "see README")
     if sln:
         test_cmd = f"dotnet test {sln}"
     elif stack["flutter"]:
         test_cmd = "flutter test"
     elif stack["node"]:
         test_cmd = "npm test"
+    elif stack["java"]:
+        test_cmd = "./mvnw test" if (repo / "pom.xml").exists() else "./gradlew test"
+    elif stack["python"]:
+        test_cmd = "pytest"
 
-    build_cmd = f"dotnet build {sln}" if sln else ("flutter build apk --debug" if stack["flutter"] else "ver README")
+    build_cmd = f"dotnet build {sln}" if sln else ("flutter build apk --debug" if stack["flutter"] else "see README")
 
-    stack_body = f"""- Stack: {', '.join(k for k, v in stack.items() if v and k not in ('docs_only', 'landing')) or 'ver README'}
-- Formatação: formatter da stack (`dotnet format`, `dart format`, etc.)
-- Testes: `{test_cmd}` (pasta da feature)
+    stack_body = f"""- Stack: {', '.join(k for k, v in stack.items() if v and k not in ('docs_only', 'landing', 'node_backend')) or 'see README'}
+- Active stack packs (read only these):
+{packs_markdown(stack)}
+- Formatting: the stack formatter (`dotnet format`, `dart format`, etc.)
+- Tests: `{test_cmd}` (feature folder)
 - Build:
 
 ```bash
@@ -334,65 +549,66 @@ def fill_repo(repo: Path) -> None:
 ```
 
 - Commit/push: **ask** (`Governance/permissions.md`)
-- Deps: OSS primeiro (`Governance/cost.md`)
+- Deps: OSS first (`Governance/cost.md`)
 """
-    standards_path = harness / "Knowledge/Standards.md"
-    if standards_path.is_file() and "Organização por feature" in standards_path.read_text(encoding="utf-8", errors="replace"):
-        upsert_project_section(standards_path, "Stack e comandos (gerado)", stack_body)
+    standards_path = harness / "Knowledge/standards.md"
+    standards_text = standards_path.read_text(encoding="utf-8", errors="replace") if standards_path.is_file() else ""
+    if any(h in standards_text for h in STANDARDS_FEATURE_HEADINGS):
+        upsert_project_section(standards_path, "Stack and commands (generated)", stack_body)
     else:
         write(
             standards_path,
             f"""# Standards — {name}
 
-> Gerado automaticamente. Alinhe com o README do projeto.
+> Generated automatically. Align with the project README.
 
-## Organização por feature (obrigatório)
+## Feature-first organization (mandatory)
 
-Código e testes **sempre** por capacidade de negócio. Ver template do kit.
+Code and tests **always** organized by business capability. See the kit template.
 
-## Stack e comandos (gerado)
+## Stack and commands (generated)
 
 {stack_body}
 """,
         )
 
     # Tools — stack-specific sections
-    build_tools = """## Genérico / arquivos
+    build_tools = """## Generic / files
 
-| ID | Ação | Notas |
+| ID | Action | Notes |
 |----|------|-------|
-| `fs.read` | Ler arquivos | auto |
-| `fs.write` | Editar no escopo | auto |
-| `fs.delete` | Apagar arquivo | **ask** |
+| `fs.read` | Read files | auto |
+| `fs.write` | Edit within scope | auto |
+| `fs.delete` | Delete file | **ask** |
 | `fs.write.secrets` | Secrets | **deny** |
 """
     if stack["dotnet"]:
         build_tools += """
 ## .NET
 
-| ID | Comando | Notas |
+| ID | Command | Notes |
 |----|---------|-------|
 | `dotnet.restore` | `dotnet restore` | auto |
 | `dotnet.build` | `dotnet build` | auto |
-| `dotnet.format` | `dotnet format` | auto escopo |
+| `dotnet.format` | `dotnet format` | auto (scope) |
 | `dotnet.add.package` | `dotnet add package` | **ask** |
 """
     if stack["flutter"]:
         build_tools += """
 ## Flutter
 
-| ID | Comando | Notas |
+| ID | Command | Notes |
 |----|---------|-------|
 | `flutter.pub.get` | `flutter pub get` | auto |
 | `dart.format` | `dart format` | auto |
 | `flutter.pub.add` | `flutter pub add` | **ask** |
-| `flutter.pub.upgrade` | upgrade global | **deny** |
+| `flutter.pub.upgrade` | global upgrade | **deny** |
 """
     if stack["node"]:
         build_tools += """
 ## Node
 
-| ID | Comando | Notas |
+| ID | Command | Notes |
 |----|---------|-------|
 | `node.install` | npm/pnpm/yarn install | auto |
 | `node.build` | npm run build | auto |
@@ -400,61 +616,81 @@ Código e testes **sempre** por capacidade de negócio. Ver template do kit.
 """
     write(harness / "Tools/build.md", f"# Tools — Build\n\n{build_tools}")
 
-    test_tools = "| ID | Comando | Notas |\n|----|---------|-------|\n"
+    test_tools = "| ID | Command | Notes |\n|----|---------|-------|\n"
     if stack["dotnet"]:
         test_tools += f"| `dotnet.test` | `{test_cmd}` | auto |\n"
     if stack["flutter"]:
         test_tools += "| `flutter.test` | `flutter test` | auto |\n"
     if stack["node"]:
         test_tools += "| `node.test` | `npm test` | auto |\n"
-    if not stack["dotnet"] and not stack["flutter"] and not stack["node"]:
-        test_tools += "| `test.manual` | conforme README | **ask** |\n"
+    if stack["java"]:
+        jvm = "./mvnw test" if (repo / "pom.xml").exists() else "./gradlew test"
+        test_tools += f"| `jvm.test` | `{jvm}` | auto |\n"
+    if stack["python"]:
+        test_tools += "| `python.test` | `pytest` | auto |\n"
+    for tool_id, cmd in extra_tests:
+        test_tools += f"| `{tool_id}` | `{cmd}` | auto |\n"
+    if not any(stack[k] for k in ("dotnet", "flutter", "node", "java", "python")) and not extra_tests:
+        test_tools += "| `test.manual` | as per README | **ask** |\n"
     test_tools += (
-        "\nNovos testes: **sempre** sob a pasta da feature (`Standards.md`). "
-        "Lacuna AC-G*: stub mínimo na pasta da feature.\n"
+        "\nNew tests: **always** under the feature folder (`standards.md`). "
+        "AC-G* gap: minimal stub in the feature folder.\n"
     )
     write(harness / "Tools/test.md", f"# Tools — Test\n\n{test_tools}")
 
-    val_tools = """| ID | Ação | Notas |
+    val_tools = """| ID | Action | Notes |
 |----|------|-------|
-| `harness.spec.read` | Ler `.ai-harness/**` | auto |
-| `harness.spec.write` | Atualizar specs | auto se mudou |
+| `harness.check` | `python3 .ai-harness/Tools/bin/check-harness.py [--diff <base>]` | auto — structure + rules on the diff |
+| `harness.coverage` | `python3 .ai-harness/Tools/bin/check-harness.py --coverage "<report glob>"` | auto — ≥ 80% line per testable artifact |
+| `harness.check.hook` | `python3 .ai-harness/Tools/bin/check-harness.py --install-hook` | **ask** — installs the git pre-commit hook |
+| `harness.spec.read` | Read `.ai-harness/**` | auto |
+| `harness.spec.write` | Update specs | auto if changed |
 | `harness.state.write` | Runtime/state | auto |
 """
     if stack["dotnet"]:
-        val_tools += "| `dotnet.build` | build de validação | auto |\n"
+        val_tools += "| `dotnet.build` | validation build | auto |\n"
     if stack["flutter"]:
         val_tools += "| `flutter.analyze` | `flutter analyze` | auto |\n"
+    if stack["typescript"]:
+        val_tools += "| `node.lint` | `npm run lint` (if present) | auto |\n"
+    if stack["java"]:
+        jvm_build = "./mvnw -q verify -DskipTests" if (repo / "pom.xml").exists() else "./gradlew build -x test"
+        val_tools += f"| `jvm.build` | `{jvm_build}` | auto |\n"
+    if stack["python"]:
+        val_tools += "| `python.lint` | `ruff check` (if adopted) | auto |\n"
+    for key, _r, _t, lint, _c in EXTRA_STACKS:
+        if lint and stack.get(key):
+            val_tools += f"| `{lint[0]}` | `{lint[1]}` | auto |\n"
     write(harness / "Tools/validation.md", f"# Tools — Validation\n\n{val_tools}")
 
     upsert_project_section(
         harness / "Governance/architecture.md",
-        "Projeto (detectado)",
-        f"- Estilo: {arch_style[0]}\n"
-        "- Feature-first e OSS-first valem mesmo neste overlay.\n"
-        "- Mudanças estruturais → ADR; cloud proprietário → ADR (`cost.md`).\n",
+        "Project (detected)",
+        f"- Style: {arch_style[0]}\n"
+        "- Feature-first and OSS-first apply in this overlay too.\n"
+        "- Structural changes → ADR; proprietary cloud → ADR (`cost.md`).\n",
     )
     upsert_project_section(
         harness / "Governance/quality.md",
-        "Projeto (detectado)",
+        "Project (detected)",
         f"- Build: `{build_cmd}`\n"
-        f"- Testes: `{test_cmd}` (escopo da feature; AC-T* ou AC-G* + stub)\n"
-        "- Evidências em `Specification/features/<id>/acceptance.md`\n",
+        f"- Tests: `{test_cmd}` (feature scope; AC-T* or AC-G* + stub)\n"
+        "- Evidence in `Specification/features/<id>/acceptance.md`\n",
     )
 
     write(
-        harness / "Specification/features/INDEX.md",
-        f"""# Features — índice
+        harness / "Specification/features/index.md",
+        f"""# Features — index
 
-> Gerado automaticamente em {date.today().isoformat()}.
+> Generated automatically on {date.today().isoformat()}.
 
-| ID | Spec | Código | Status | Resumo |
+| ID | Spec | Code | Status | Summary |
 |----|------|--------|--------|--------|
 {feature_table}
 
-## Próximo passo
+## Next step
 
-Para cada feature crítica, preencher `requirements.md`, `use-cases.md`, `acceptance.md`.
+For each critical feature, fill in `requirements.md`, `use-cases.md`, `acceptance.md`.
 """,
     )
 
@@ -471,7 +707,8 @@ Para cada feature crítica, preencher `requirements.md`, `use-cases.md`, `accept
             req = tpl_r.read_text(encoding="utf-8").replace("<id>", fid).replace("{{path}}", code.rsplit("/", 1)[0] if "/" in code else code)
             uc = tpl_u.read_text(encoding="utf-8").replace("<id>", fid)
             ac = tpl_a.read_text(encoding="utf-8").replace("<id>", fid)
-            ac = ac.replace("- [ ] AC-01 — Use cases cobertos ou testados", f"- [ ] AC-01 — Módulo `{code}` documentado e testado")
+            for seed in ("- [ ] AC-01 — Use cases covered or tested", "- [ ] AC-01 — Use cases cobertos ou testados"):
+                ac = ac.replace(seed, f"- [ ] AC-01 — Module `{code}` documented and tested")
             write(dest / "requirements.md", req.replace("planned \\| wip \\| partial \\| stable", status))
             write(dest / "use-cases.md", uc)
             write(dest / "acceptance.md", ac)
@@ -493,13 +730,16 @@ def main() -> int:
 
     ok = 0
     for repo in repos:
+        if is_harness_kit(repo):
+            print(f"[SKIP] {repo.name} — kit-template")
+            continue
         if not (repo / ".ai-harness").is_dir():
-            print(f"[SKIP] {repo.name} — sem .ai-harness")
+            print(f"[SKIP] {repo.name} — no .ai-harness")
             continue
         fill_repo(repo)
         print(f"[OK] {repo.name}")
         ok += 1
-    print(f"\nPreenchidos: {ok}")
+    print(f"\nFilled: {ok}")
     return 0
 
 

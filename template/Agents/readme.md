@@ -1,19 +1,19 @@
-# Agents — papéis
+# Agents — roles
 
-Papéis que o runtime assume. Workflows **orquestram** papéis; papéis **não** inventam o processo.
+Roles the runtime takes on. Workflows **orchestrate** roles; roles do **not** invent the process.
 
-| Papel | Arquivo | Foco |
-|-------|---------|------|
-| Architect | [architect.md](./architect.md) | Desenho, ADR, limites, trade-offs, OSS-first |
-| Developer | [developer.md](./developer.md) | Implementação no escopo da spec |
+| Role | File | Focus |
+|------|------|-------|
+| Architect | [architect.md](./architect.md) | Design, ADR, boundaries, trade-offs, OSS-first |
+| Developer | [developer.md](./developer.md) | Implementation within the spec scope |
 | Reviewer | [reviewer.md](./reviewer.md) | Diff vs Knowledge + Governance |
-| Tester | [tester.md](./tester.md) | Estratégia e evidência de testes (AC-T\* / AC-G\*) |
+| Tester | [tester.md](./tester.md) | Test strategy and evidence (AC-T\* / AC-G\*) |
 
-Contexto deste repo (paths/comandos): [project.md](./project.md).
+Context for this repo (paths/commands): [project.md](./project.md).
 
-## Regras
+## Rules
 
-1. Declare o papel ativo no `STATUS.md` / `LOG.md` da run.
-2. Handoff explícito (ex.: Architect → Developer → Tester → Reviewer).
-3. Em dúvida de escopo ou arquitetura → Architect ou BLOCKED, não “chutar”.
-4. `fill`/`enrich` **não** substituem estes papéis — só atualizam `project.md`.
+1. Declare the active role in the run's `status.md` / `log.md`.
+2. Explicit handoff (e.g. Architect → Developer → Tester → Reviewer).
+3. When in doubt about scope or architecture → Architect or BLOCKED; do not guess.
+4. `fill`/`enrich` do **not** replace these roles — they only update `project.md`.

@@ -1,32 +1,51 @@
 # Governance — Quality
 
-## Regras base
+## Baseline rules
 
-- Sem issues **novos** de lint/analyze nos arquivos tocados (salvo acordo explícito).
-- Regras de negócio novas com testes proporcionais ao risco.
-- Sem expandir escopo para “melhorar qualidade” fora do aceite.
-- Aceite = testes: **AC-T\*** verdes, **ou** **AC-G\*** justificado + stub na pasta da feature.
+- No **new** lint/analyze issues in the touched files (unless explicitly agreed).
+- **Every implementation ships unit tests** (new and changed behavior) — no exceptions for "small" changes; AC-G\* only for behavior that is not unit-testable, with a stub and a reason.
+- Do not expand scope to "improve quality" outside the acceptance.
+- Acceptance = tests: **AC-T\*** green, **or** a justified **AC-G\*** + stub in the feature folder.
 
-## Testes
+## Tests
 
-- Novos testes **sempre** na pasta da feature (`Knowledge/Standards.md`).
-- Nunca mockar Entities / Value Objects de domínio — instâncias reais.
-- Mockar só bordas (repositórios, HTTP, clock, filesystem, brokers).
-- Naming sugerido: `MethodName_ShouldExpectedBehavior_WhenCondition`.
+- New tests **always** in the feature folder (`Knowledge/standards.md`).
+- Never mock domain Entities / Value Objects — use real instances.
+- Mock only the edges (repositories, HTTP, clock, filesystem, brokers).
+- Naming, mandatory scenarios, quality and idempotency: [standards.md](../Knowledge/standards.md#tests).
 
-## Gates sugeridos (ajuste à empresa)
+## Cross-cutting rules (source: `Knowledge/standards.md`)
 
-- [ ] Build verde no escopo
-- [ ] Testes da feature / regressão (AC-T\* ou AC-G\* + stub)
-- [ ] Lint/analyze nos tocados
-- [ ] Review humano antes de merge (MATRIX)
+| Rule | Section |
+|------|---------|
+| Code preservation | [standards.md#code-preservation-mandatory](../Knowledge/standards.md#code-preservation-mandatory) |
+| Code documentation + delivery in `docs/` | [standards.md#code-documentation](../Knowledge/standards.md#code-documentation) |
+| Structured logging | [standards.md#logging](../Knowledge/standards.md#logging) |
+| Structure / lean orchestrators | [standards.md#implementation-structure](../Knowledge/standards.md#implementation-structure) |
 
-## Cobertura (se a empresa definir)
+Automated check: `harness.check` ([Tools/validation.md](../Tools/validation.md)).
 
-- Alvo típico de domínio: **80% line** por artefato — cobertura significativa, não inflação.
-- Prioridade: Domain → Application → Infrastructure → API (só se houver regra de negócio).
+## Suggested gates (adjust to the company)
 
-## Projeto
+- [ ] Green build within scope
+- [ ] Unit tests for every new/changed behavior; feature/regression tests green (AC-T\* or AC-G\* + stub)
+- [ ] Coverage ≥ 80% line on every testable artifact (`harness.check --coverage`)
+- [ ] Lint/analyze on touched files
+- [ ] Attributes preserved; logic unchanged outside the acceptance
+- [ ] Code docs + `docs/` updated
+- [ ] Security baseline S1–S12 + logging verification L1–L8 with evidence
+- [ ] `harness.check` without errors + final validation of all rules recorded in the LOG
+- [ ] Human review before merge (MATRIX)
 
-- Cobertura mínima:
-- Ferramentas obrigatórias:
+## Coverage (mandatory)
+
+- **Minimum 80% line coverage on every testable artifact** (assembly/project, module, package, library, app). This is a floor: a company or project may raise it, never lower it.
+- Testable artifact = anything containing logic. Exclusions only for generated code, DI/bootstrap wiring (`Program`/`main`), migrations, pure DTOs and configuration — listed explicitly in the coverage tool config, never excluded to hit the number.
+- Measured with the stack's coverage tool (see the active stack pack) and checked with `harness.check --coverage <report>`.
+- Meaningful coverage, not inflation: assertions on behavior; no tests without assertions.
+- Priority: Domain → Application → Infrastructure → API (only if it has business rules).
+
+## Project
+
+- Minimum coverage:
+- Mandatory tools:

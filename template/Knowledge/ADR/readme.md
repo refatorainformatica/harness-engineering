@@ -1,23 +1,23 @@
 # ADR — Architecture Decision Records
 
-Registre decisões que afetam arquitetura, stack, integrações ou trade-offs duradouros.
+Record decisions that affect architecture, stack, integrations or lasting trade-offs.
 
-## Quando criar
+## When to create
 
-- Nova dependência significativa
-- Mudança de estilo arquitetural
-- Integração externa / vendor
-- Trade-off de performance, segurança ou custo com impacto sistêmico
+- New significant dependency
+- Change of architectural style
+- External integration / vendor
+- Performance, security or cost trade-off with systemic impact
 
-## Índice
+## Index
 
-| ID | Título | Status | Data |
-|----|--------|--------|------|
-| ADR-0001 | (exemplo — substitua) | proposed | YYYY-MM-DD |
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| ADR-0001 | (example — replace) | proposed | YYYY-MM-DD |
 
-## Como
+## How
 
-1. Copiar [template.md](./template.md) → `ADR-XXXX-titulo-curto.md`
-2. Preencher Context / Decision / Consequences
-3. Atualizar este índice
-4. Referenciar o ADR na run e, se preciso, em Architecture.md
+1. Copy [template.md](./template.md) → `adr-xxxx-short-title.md`
+2. Fill in Context / Decision / Consequences
+3. Update this index
+4. Reference the ADR in the run and, if needed, in architecture.md

@@ -1,34 +1,34 @@
 # Domain — {{PROJECT}}
 
-## Visão de produto (resumo)
+## Product vision (summary)
 
-<!-- 2–4 frases. Detalhe de roadmap fica fora do Knowledge se mudar muito. -->
+<!-- 2–4 sentences. Roadmap detail stays outside Knowledge if it changes often. -->
 
 ## Personas
 
-| Persona | Necessidade |
-|---------|-------------|
+| Persona | Need |
+|---------|------|
 | … | … |
 
-## Glossário (linguagem ubíqua)
+## Glossary (ubiquitous language)
 
-| Termo | Significado |
-|-------|-------------|
+| Term | Meaning |
+|------|---------|
 | … | … |
 
-## Contextos / limites
+## Contexts / boundaries
 
-| Contexto | Responsabilidade | Não faz |
-|----------|------------------|---------|
+| Context | Responsibility | Does not |
+|---------|----------------|----------|
 | … | … | … |
 
-## Regras de domínio invioláveis
+## Inviolable domain rules
 
 1. …
 2. …
 
-## Criticidade
+## Criticality
 
-- Perfil: software sem IA | IA assistiva | IA alto impacto | outro: …
-- Risco: baixo | médio | alto
+- Profile: software without AI | assistive AI | high-impact AI | other: …
+- Risk: low | medium | high
 - Owner:

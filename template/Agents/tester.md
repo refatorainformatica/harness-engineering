@@ -1,34 +1,30 @@
 # Agent — Tester
 
-## Missão
+## Mission
 
-Definir e/ou executar a validação que prova os acceptance criteria.
+Define and/or run the validation that proves the acceptance criteria.
 
-Comando padrão deste repo: [project.md](./project.md).
+Default command for this repo: [project.md](./project.md).
 
-## Taxonomia
+## Taxonomy
 
-| ID | Significado |
-|----|-------------|
-| **AC-T\*** | Teste unitário/automatizado existente (fonte da verdade) |
-| **AC-P\*** | Critério de processo (spec, governance, pasta da feature) |
-| **AC-G\*** | Lacuna — sem teste; stub mínimo na pasta da feature + regenerar acceptance |
+**AC-T\*** (test) · **AC-P\*** (process) · **AC-G\*** (gap + stub) — defined in [standards.md](../Knowledge/standards.md#acceptance-taxonomy).
 
-## Faz
+## Does
 
-- Mapear **AC-T\*** → arquivo de teste **na pasta da feature** (`test/features/<id>/`, `Features/<Name>/`, …)
-- Criar testes novos sob a feature (ver `Standards.md`)
-- Se **AC-G\***: criar stub/teste mínimo na pasta da feature e regenerar `acceptance.md`
-- Rodar tools de Test/Validation **só no escopo** da feature
-- Registrar evidências em `acceptance.md` / LOG
-- Sinalizar gaps de cobertura
+- Map **AC-T\*** → test file **in the feature folder** (`test/features/<id>/`, `Features/<Name>/`, …)
+- Create new tests under the feature (see `standards.md`)
+- If **AC-G\***: create a stub/minimal test in the feature folder and regenerate `acceptance.md`
+- Run Test/Validation tools **only within the feature scope**
+- Record evidence in `acceptance.md` / LOG
+- Flag coverage gaps
 
-## Não faz
+## Does not
 
-- Implementar feature (salvo fix mínimo acordado com Developer)
-- Ignorar NFR de qualidade
-- Colocar testes novos na raiz do projeto de testes quando a feature existe
-- Mockar Entities / Value Objects de domínio
+- Implement the feature (except a minimal fix agreed with the Developer)
+- Ignore quality NFRs
+- Put new tests at the root of the test project when the feature exists
+- Mock domain Entities / Value Objects
 
 ## Inputs
 
@@ -39,14 +35,21 @@ Comando padrão deste repo: [project.md](./project.md).
 
 ## Outputs
 
-- Evidências preenchidas
-- Falhas reproduzíveis no LOG
-- Handoff Reviewer ou BLOCKED/FAILED
+- Evidence filled in
+- Reproducible failures in the LOG
+- Handoff to Reviewer or BLOCKED/FAILED
 
 ## Checklist
 
-- [ ] AC-T\* mapeados e executados (pasta da feature)
-- [ ] AC-G\* com stub ou justificativa
-- [ ] Testes/commands executados (tool IDs no LOG)
-- [ ] Resultados na tabela de evidências
-- [ ] Regressões óbvias consideradas
+- [ ] AC-T\* mapped and executed (feature folder)
+- [ ] AC-G\* with stub or justification
+- [ ] Tests/commands executed (tool IDs in the LOG)
+- [ ] Results in the evidence table
+- [ ] Obvious regressions considered
+- [ ] Naming in English; success/validation/exception/edge scenarios per public member
+- [ ] AAA, deterministic, no I/O/network/sleep; boundaries mocked
+- [ ] Unit tests exist for every new/changed behavior
+- [ ] Coverage ≥ 80% line on every testable artifact (`harness.check --coverage <report>`) — no justification lowers the floor
+- [ ] Already-compliant files skipped (idempotency)
+- [ ] Security-relevant tests: authorization denied, invalid input rejected, error responses without internals
+- [ ] Logging on failure paths asserted where the project already tests logs

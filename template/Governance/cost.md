@@ -1,37 +1,44 @@
 # Governance — Cost
 
-FinOps / custo de cloud, CI e tokens de IA. Consolidado a partir do uso do harness na frota de repositórios.
+FinOps / cost of cloud, CI and AI tokens.
 
-## Preferência OSS (obrigatório)
+## OSS preference (mandatory)
 
-Ao propor dependência, modelo ou infra, **nesta ordem**:
+When proposing a dependency, model or infra, **in this order**:
 
-1. Biblioteca/modelo open source (local ou self-hosted)
-2. API/serviço OSS auto-hospedado (Docker/K8s)
-3. Cloud proprietário **somente** com ADR motivando o gap (não conveniência)
+1. Open source library/model (local or self-hosted)
+2. Self-hosted OSS API/service (Docker/K8s)
+3. Proprietary cloud **only** with an ADR justifying the gap (not convenience)
 
-Checklist: dá para fazer com OSS? Se sim, faça com OSS. Cloud pago só com gap real documentado.
+Checklist: can it be done with OSS? If so, do it with OSS. Paid cloud only with a real, documented gap.
 
-## Regras base
+## Baseline rules
 
-- Evitar upgrades de SKU/planos cloud sem `ask`.
-- Preferir free tier / self-host enquanto couber.
-- Evitar jobs/pipelines caros em loop de agente sem necessidade.
-- Verificação mínima (testes da feature/run) — não a suíte monólito a cada iteração.
-- Não subir stack compose completa só para um teste unitário.
-- Uso de modelos/APIs pagas: só no escopo autorizado; preferir local (ex.: Ollama).
-- Máx. ~12 iterações/run (ver `Runtime/LOOP.md`); evitar rebuilds caros em loop.
+- Avoid cloud SKU/plan upgrades without `ask`.
+- Prefer free tier / self-host while it fits.
+- Avoid expensive jobs/pipelines in the agent loop without need.
+- Minimal verification (feature/run tests) — not the whole monolith suite on every iteration.
+- Do not start the full compose stack just for a unit test.
+- Use of paid models/APIs: only within the authorized scope; prefer local (e.g. Ollama).
+- Max. ~12 iterations/run (see `Runtime/loop.md`); avoid expensive rebuilds in the loop.
 
-## Limites (empresa)
+## Cloud (AWS / Azure / GCP / OCI)
 
-| Recurso | Política |
-|---------|----------|
-| Cloud SKU | sem upgrade sem `ask`; preferir free tier / self-host |
-| CI / build | testes do escopo da feature/run |
-| Tokens LLM | local primeiro; API paga só com autorização |
-| Containers | compose completo não é pré-requisito de unit test |
-| Agente | ~12 iterações/run; BLOCKED com resumo se estourar |
+- Choice of provider and of each proprietary managed service = ADR (gap vs. portable option: Kubernetes, PostgreSQL, OpenTelemetry, Terraform/OpenTofu).
+- Mandatory cost tags/labels (`owner`, `env`, `app`, `cost-center`); budgets with alerts per environment.
+- Non-prod environments can be shut down/scaled to zero when possible; no premium SKU in dev.
+- Estimate the cost of the change in the Reviewer (e.g. Infracost) when the plan creates a paid resource.
 
-## Projeto
+## Limits (company)
+
+| Resource | Policy |
+|----------|--------|
+| Cloud SKU | no upgrade without `ask`; prefer free tier / self-host |
+| CI / build | tests within the feature/run scope |
+| LLM tokens | local first; paid API only with authorization |
+| Containers | full compose is not a prerequisite for unit tests |
+| Agent | ~12 iterations/run; BLOCKED with a summary if exceeded |
+
+## Project
 
 - …

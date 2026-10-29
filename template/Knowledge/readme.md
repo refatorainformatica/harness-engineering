@@ -1,16 +1,16 @@
 # Knowledge — {{PROJECT}}
 
-Verdade **estável** do sistema. Muda com ADR ou decisão explícita — não a cada feature.
+**Stable** truth of the system. Changes via ADR or explicit decision — not with every feature.
 
-| Documento | Conteúdo |
-|-----------|----------|
-| [Architecture.md](./Architecture.md) | Estilo, pastas, DI, fluxos, mapa harness ↔ código |
-| [Domain.md](./Domain.md) | Glossário, linguagem ubíqua, limites de contexto |
-| [Standards.md](./Standards.md) | Código, **organização por feature**, domínio rico, naming, docs |
+| Document | Content |
+|----------|---------|
+| [architecture.md](./architecture.md) | Style, folders, DI, flows, harness ↔ code map |
+| [domain.md](./domain.md) | Glossary, ubiquitous language, context boundaries |
+| [standards.md](./standards.md) | Code, **feature-first organization**, rich domain, naming, docs |
 | [ADR/](./ADR/) | Architecture Decision Records |
 
-## Regras
+## Rules
 
-1. Antes de implementar, o agente lê o Knowledge tocado pela tarefa.
-2. Conflito Spec ↔ Knowledge → `BLOCKED` (pedir qual fonte prevalece).
-3. Mudança de arquitetura relevante → novo ADR antes ou na mesma run.
+1. Before implementing, the agent reads the Knowledge touched by the task.
+2. Spec ↔ Knowledge conflict → `BLOCKED` (ask which source prevails).
+3. Relevant architecture change → new ADR before or in the same run.

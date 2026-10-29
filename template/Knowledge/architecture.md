@@ -1,50 +1,50 @@
 # Architecture — {{PROJECT}}
 
-> Preencher na adoção.
+> Fill in on adoption.
 
-## Estilo
+## Style
 
 <!-- Clean Architecture, hexagonal, modular monolith, microservices, … -->
 
-**Feature-first (obrigatório):** pastas de código e de teste seguem a capacidade de negócio. Camadas técnicas ficam **dentro** da feature. Ver `Standards.md`.
+**Feature-first (mandatory):** code and test folders follow the business capability. Technical layers live **inside** the feature. See `standards.md`.
 
-**OSS-first:** deps e infra na ordem open source → self-host → cloud proprietário (ADR). Ver `Governance/cost.md`.
+**OSS-first:** deps and infra in the order open source → self-host → proprietary cloud (ADR). See `Governance/cost.md`.
 
-**Domínio rico** se o estilo for DDD/Clean Architecture: comportamento nas entidades; Application só orquestra. Ver `Standards.md`.
+**Rich domain (always):** behavior lives in entities/value objects; the application layer only orchestrates. See `standards.md`.
 
 ```text
-{{raiz-do-codigo}}/
-├── features/<id>/          # ou Features/<Name>/
-│   ├── …                   # camadas da feature
+{{code-root}}/
+├── features/<id>/          # or Features/<Name>/
+│   ├── …                   # feature layers
 │   └── …
 └── …
 ```
 
-## Camadas / módulos
+## Layers / modules
 
 ```text
 features/<id>/
-├── …                       # domain / application / data / presentation — conforme o stack
+├── …                       # domain / application / data / presentation — per the stack
 └── …
 ```
 
-Testes espelham a feature: `tests/.../Features/<id>/` ou `test/features/<id>/`.
+Tests mirror the feature: `tests/.../Features/<id>/` or `test/features/<id>/`.
 
 ## Cross-cutting
 
-| Peça | Papel |
-|------|--------|
+| Piece | Role |
+|-------|------|
 | DI | … |
 | Auth / tenancy | … |
 | Messaging | … |
 | Observability | … |
 
-## Relação harness ↔ código
+## Harness ↔ code mapping
 
-| Spec feature | Código |
-|--------------|--------|
+| Spec feature | Code |
+|--------------|------|
 | `Specification/features/<id>/` | `{{path}}/<id>/` |
 
-## Fora de escopo arquitetural (atual)
+## Out of architectural scope (current)
 
 - …
